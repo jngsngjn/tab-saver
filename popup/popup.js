@@ -1,13 +1,7 @@
 /**
- * 저장/복원 결과를 사용자에게 보여주기 위한 상태 메시지 영역
+ * 저장 결과를 사용자에게 보여주기 위한 상태 메시지
  */
 const status = document.getElementById("status");
-
-/**
- * "마지막 저장" 도메인 리스트 UI
- */
-const savedSection = document.getElementById("savedSection");
-const savedDomains = document.getElementById("savedDomains");
 
 /**
  * "새 창에서 복원" 옵션 체크박스
@@ -15,102 +9,118 @@ const savedDomains = document.getElementById("savedDomains");
 const checkbox = document.getElementById("newWindowCheckbox");
 
 /**
- * URL에서 도메인만 추출한다.
- * - URL 파싱 실패 시 빈 문자열 반환
+ * 세션 목록 UI
  */
-function getDomain(url) {
-  try {
-    return new URL(url).hostname;
-  } catch {
-    return "";
-  }
-}
-
-/**
- * 저장된 탭 목록(savedTabs)을 읽어서 도메인 리스트를 갱신한다.
- * - 도메인 중복 제거
- * - 빈 값 제거
- */
-function renderSavedDomains() {
-    chrome.storage.local.get("savedTabs", (data) => {
-        const urls = Array.isArray(data.savedTabs) ? data.savedTabs : [];
-
-        const domainCountMap = {};
-
-        urls.forEach((url) => {
-            const domain = getDomain(url);
-            if (!domain) return;
-
-            domainCountMap[domain] = (domainCountMap[domain] || 0) + 1;
-        });
-
-        const entries = Object.entries(domainCountMap);
-
-        if (entries.length === 0) {
-            savedSection.classList.add("hidden");
-            savedDomains.innerHTML = "";
-            return;
-        }
-
-        savedDomains.innerHTML = entries
-            .map(([domain, count]) => `<li>${domain} (${count})</li>`)
-            .join("");
-
-        savedSection.classList.remove("hidden");
-    });
-}
+const sessionList = document.getElementById("sessionList");
+const emptyHint = document.getElementById("emptyHint");
 
 /**
  * popup 로드 시:
  * - 체크박스 상태 복원
- * - 마지막 저장 목록 표시
+ * - 세션 목록 렌더링
  */
 chrome.storage.local.get("openInNewWindow", (data) => {
-  checkbox.checked = Boolean(data.openInNewWindow);
+    checkbox.checked = Boolean(data.openInNewWindow);
 });
 
-renderSavedDomains();
+renderSessionList();
 
 /**
  * 체크박스 상태 변경 시 local storage에 저장
  */
 checkbox.addEventListener("change", () => {
-  chrome.storage.local.set({
-    openInNewWindow: checkbox.checked
-  });
+    chrome.storage.local.set({
+        openInNewWindow: checkbox.checked
+    });
 });
 
 /**
- * [현재 탭 저장] 버튼 클릭 처리
- * - background로 저장 요청 전송
+ * [현재 탭 저장] 버튼 클릭
+ * - background에 저장 요청
  * - 저장 완료 메시지 표시
- * - 저장된 도메인 리스트 즉시 갱신
+ * - 세션 목록 갱신
  */
 document.getElementById("saveBtn").addEventListener("click", () => {
-  chrome.runtime.sendMessage({ type: "SAVE_TABS" }, (response) => {
-    if (!response) return;
+    chrome.runtime.sendMessage({ type: "SAVE_SESSION" }, (response) => {
+        if (!response) return;
 
-    status.textContent = `탭 ${response.count}개 저장됨`;
-    status.classList.remove("hidden");
+        status.textContent = `탭 ${response.count}개 저장됨`;
+        status.classList.remove("hidden");
 
-    setTimeout(() => {
-      status.classList.add("hidden");
-    }, 2000);
+        setTimeout(() => {
+            status.classList.add("hidden");
+        }, 2000);
 
-    // 저장 직후 목록 갱신
-    renderSavedDomains();
-  });
+        renderSessionList();
+    });
 });
 
 /**
- * [탭 다시 열기] 버튼 클릭 처리
- * - 저장된 옵션(openInNewWindow)과 함께 복원 요청을 전달
+ * 세션 목록을 렌더링한다.
+ * - sessions가 없으면 빈 상태 메시지 표시
+ * - 각 세션에 [열기] 버튼 제공
  */
-document.getElementById("restoreBtn").addEventListener("click", () => {
-  chrome.storage.local.get("openInNewWindow", (data) => {
-    chrome.runtime.sendMessage({
-      type: "RESTORE_TABS",
-      openInNewWindow: Boolean(data.openInNewWindow)
+function renderSessionList() {
+    chrome.storage.local.get("sessions", (data) => {
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+
+        if (sessions.length === 0) {
+            sessionList.innerHTML = "";
+            emptyHint.classList.remove("hidden");
+            return;
+        }
+
+        emptyHint.classList.add("hidden");
+
+        sessionList.innerHTML = sessions
+            .map((s) => {
+                const count = Array.isArray(s.urls) ? s.urls.length : 0;
+                const safeName = escapeHtml(s.name || "Untitled");
+                const safeId = escapeHtml(s.id);
+
+                return `
+          <li>
+            <div class="sessionName">
+              ${safeName}
+              <span class="sessionMeta">(${count})</span>
+            </div>
+            <button class="openBtn" data-session-id="${safeId}">열기</button>
+          </li>
+        `;
+            })
+            .join("");
+
+        // 리스트 렌더 후 버튼 이벤트 바인딩
+        sessionList.querySelectorAll(".openBtn").forEach((btn) => {
+            btn.addEventListener("click", onClickOpenSession);
+        });
     });
-  });
-});
+}
+
+/**
+ * [열기] 버튼 클릭 처리
+ * - 현재 저장된 옵션(openInNewWindow)을 함께 전달
+ */
+function onClickOpenSession(e) {
+    const sessionId = e.currentTarget.dataset.sessionId;
+
+    chrome.storage.local.get("openInNewWindow", (data) => {
+        chrome.runtime.sendMessage({
+            type: "RESTORE_SESSION",
+            sessionId,
+            openInNewWindow: Boolean(data.openInNewWindow)
+        });
+    });
+}
+
+/**
+ * 간단한 HTML 이스케이프 (popup 렌더 안전용)
+ */
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}

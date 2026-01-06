@@ -1,28 +1,27 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="popup.css" />
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-  <h1>Tab Saver</h1>
+<h1>Tab Saver</h1>
 
-  <label>
+<label class="row">
     <input type="checkbox" id="newWindowCheckbox" />
     새 창에서 복원
-  </label>
+</label>
 
-  <button id="saveBtn">현재 탭 저장</button>
-  <button id="restoreBtn">탭 다시 열기</button>
+<button id="saveBtn">현재 탭 저장</button>
 
-  <p id="status" class="hidden"></p>
+<p id="status" class="hidden"></p>
 
-  <div id="savedSection" class="section hidden">
-    <div class="sectionTitle">마지막 저장</div>
-    <ul id="savedDomains" class="list"></ul>
-  </div>
+<div class="section">
+    <div class="sectionTitle">탭 꾸러미</div>
+    <ul id="sessionList" class="list"></ul>
+    <p id="emptyHint" class="hint hidden">저장된 탭 꾸러미가 없습니다.</p>
+</div>
 
-  <script src="popup.js"></script>
+<script src="popup.js"></script>
 </body>
-
 </html>
