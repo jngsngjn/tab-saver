@@ -89,3 +89,29 @@ button {
     font-size: 12px;
     opacity: 0.6;
 }
+
+.sessionItem {
+    padding-bottom: 6px;
+}
+
+.sessionHeader {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.actions {
+    display: flex;
+    gap: 4px;
+}
+
+.domainList {
+    margin: 4px 0 0 0;
+    padding-left: 12px;
+}
+
+.domainItem {
+    font-size: 11px;
+    opacity: 0.85;
+    padding: 2px 0;
+}

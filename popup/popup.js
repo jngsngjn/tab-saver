@@ -51,31 +51,71 @@ function renderSessionList() {
         emptyHint.classList.add("hidden");
 
         sessionList.innerHTML = sessions
-            .map(s => `
-        <li>
-          <div class="sessionName">
-            ${escapeHtml(s.name)}
-            <span class="sessionMeta">(${s.urls.length})</span>
-          </div>
-          <button class="iconBtn openBtn" data-id="${s.id}">▶</button>
-          <button class="iconBtn deleteBtn" data-id="${s.id}" data-name="${escapeHtml(
-                s.name
-            )}">🗑</button>
-        </li>
-      `)
+            .map((s) => {
+                const domainMap = countDomains(s.urls);
+
+                const domainListHtml = Object.entries(domainMap)
+                    .map(
+                        ([domain, count]) =>
+                            `<li class="domainItem">${domain} (${count})</li>`
+                    )
+                    .join("");
+
+                return `
+          <li class="sessionItem">
+            <div class="sessionHeader" data-id="${s.id}">
+              <div class="sessionName">
+                ${escapeHtml(s.name)}
+                <span class="sessionMeta">(${s.urls.length})</span>
+              </div>
+              <div class="actions">
+                <button class="iconBtn openBtn" data-id="${s.id}">▶</button>
+                <button class="iconBtn deleteBtn" data-id="${s.id}" data-name="${escapeHtml(
+                    s.name
+                )}">🗑</button>
+              </div>
+            </div>
+
+            <ul class="domainList hidden">
+              ${domainListHtml}
+            </ul>
+          </li>
+        `;
+            })
             .join("");
 
-        sessionList.querySelectorAll(".openBtn").forEach(btn =>
-            btn.addEventListener("click", onOpen)
-        );
-        sessionList.querySelectorAll(".deleteBtn").forEach(btn =>
-            btn.addEventListener("click", onDelete)
-        );
+        bindSessionEvents();
     });
+}
+
+/* 이벤트 바인딩 */
+function bindSessionEvents() {
+    sessionList.querySelectorAll(".openBtn").forEach(btn =>
+        btn.addEventListener("click", onOpen)
+    );
+    sessionList.querySelectorAll(".deleteBtn").forEach(btn =>
+        btn.addEventListener("click", onDelete)
+    );
+
+    sessionList.querySelectorAll(".sessionHeader").forEach(header =>
+        header.addEventListener("click", onToggle)
+    );
+}
+
+/* 토글 */
+function onToggle(e) {
+    // 버튼 클릭은 토글 제외
+    if (e.target.closest("button")) return;
+
+    const item = e.currentTarget.closest(".sessionItem");
+    const domainList = item.querySelector(".domainList");
+
+    domainList.classList.toggle("hidden");
 }
 
 /* 열기 */
 function onOpen(e) {
+    e.stopPropagation();
     const sessionId = e.currentTarget.dataset.id;
 
     chrome.storage.local.get("openInNewWindow", (data) => {
@@ -89,6 +129,7 @@ function onOpen(e) {
 
 /* 삭제 */
 function onDelete(e) {
+    e.stopPropagation();
     const sessionId = e.currentTarget.dataset.id;
     const name = e.currentTarget.dataset.name;
 
@@ -98,6 +139,18 @@ function onDelete(e) {
         { type: "DELETE_SESSION", sessionId },
         () => renderSessionList()
     );
+}
+
+/* 도메인 개수 계산 */
+function countDomains(urls) {
+    const map = {};
+    urls.forEach((url) => {
+        try {
+            const domain = new URL(url).hostname;
+            map[domain] = (map[domain] || 0) + 1;
+        } catch {}
+    });
+    return map;
 }
 
 /* HTML escape */
