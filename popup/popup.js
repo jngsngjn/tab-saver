@@ -32,27 +32,32 @@ function getDomain(url) {
  * - 빈 값 제거
  */
 function renderSavedDomains() {
-  chrome.storage.local.get("savedTabs", (data) => {
-    const urls = Array.isArray(data.savedTabs) ? data.savedTabs : [];
+    chrome.storage.local.get("savedTabs", (data) => {
+        const urls = Array.isArray(data.savedTabs) ? data.savedTabs : [];
 
-    const domains = Array.from(
-        new Set(urls.map(getDomain).filter(Boolean))
-    );
+        const domainCountMap = {};
 
-    // 비어 있으면 섹션 숨김
-    if (domains.length === 0) {
-      savedSection.classList.add("hidden");
-      savedDomains.innerHTML = "";
-      return;
-    }
+        urls.forEach((url) => {
+            const domain = getDomain(url);
+            if (!domain) return;
 
-    // 리스트 렌더링
-    savedDomains.innerHTML = domains
-        .map((domain) => `<li>${domain}</li>`)
-        .join("");
+            domainCountMap[domain] = (domainCountMap[domain] || 0) + 1;
+        });
 
-    savedSection.classList.remove("hidden");
-  });
+        const entries = Object.entries(domainCountMap);
+
+        if (entries.length === 0) {
+            savedSection.classList.add("hidden");
+            savedDomains.innerHTML = "";
+            return;
+        }
+
+        savedDomains.innerHTML = entries
+            .map(([domain, count]) => `<li>${domain} (${count})</li>`)
+            .join("");
+
+        savedSection.classList.remove("hidden");
+    });
 }
 
 /**
