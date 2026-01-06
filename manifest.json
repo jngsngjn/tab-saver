@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Tab Saver",
+  "description": "Save all open tabs and restore them later with one click.",
+  "version": "0.1.0",
+
+  "permissions": ["tabs", "storage"],
+
+  "action": {
+    "default_popup": "popup/popup.html"
+  },
+
+  "background": {
+    "service_worker": "background/background.js"
+  },
+
+  "icons": {
+    "128": "assets/icon.png"
+  }
+}
