@@ -5,8 +5,8 @@
  */
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.type === "SAVE_SESSION") {
-        saveSession(sendResponse);
-        return true; // sendResponse를 비동기로 사용하기 위해 필요
+        saveSession(sendResponse, message.name);
+        return true;
     }
 
     if (message.type === "RESTORE_SESSION") {
@@ -20,7 +20,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
  * - sessions[] 배열에 새 항목을 추가
  * - 저장 완료 후 {count, session}을 popup으로 반환
  */
-function saveSession(sendResponse) {
+function saveSession(sendResponse, nameFromPopup) {
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
         const urls = tabs
             .map((tab) => tab.url)
@@ -34,12 +34,11 @@ function saveSession(sendResponse) {
             const createdAt = Date.now();
             const session = {
                 id: `sess_${createdAt}`,
-                name: formatSessionName(createdAt),
+                name: nameFromPopup || formatSessionName(createdAt),
                 createdAt,
                 urls
             };
 
-            // 최신 세션이 위로 오도록 앞에 추가
             sessions.unshift(session);
 
             chrome.storage.local.set({ sessions }, () => {

@@ -87,3 +87,11 @@ button {
     font-size: 12px;
     opacity: 0.7;
 }
+
+input[type="text"] {
+    width: 100%;
+    padding: 6px 8px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+    font-size: 12px;
+}

@@ -1,7 +1,12 @@
 /**
- * 저장 결과를 사용자에게 보여주기 위한 상태 메시지
+ * 저장 결과 메시지
  */
 const status = document.getElementById("status");
+
+/**
+ * 세션 이름 입력
+ */
+const sessionNameInput = document.getElementById("sessionNameInput");
 
 /**
  * "새 창에서 복원" 옵션 체크박스
@@ -15,18 +20,15 @@ const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
 
 /**
- * popup 로드 시:
- * - 체크박스 상태 복원
- * - 세션 목록 렌더링
+ * popup 로드 시 초기화
  */
 chrome.storage.local.get("openInNewWindow", (data) => {
     checkbox.checked = Boolean(data.openInNewWindow);
 });
-
 renderSessionList();
 
 /**
- * 체크박스 상태 변경 시 local storage에 저장
+ * 체크박스 상태 저장
  */
 checkbox.addEventListener("change", () => {
     chrome.storage.local.set({
@@ -35,30 +37,37 @@ checkbox.addEventListener("change", () => {
 });
 
 /**
- * [현재 탭 저장] 버튼 클릭
- * - background에 저장 요청
- * - 저장 완료 메시지 표시
- * - 세션 목록 갱신
+ * [현재 탭 저장] 클릭
+ * - 입력한 이름을 함께 전달
  */
 document.getElementById("saveBtn").addEventListener("click", () => {
-    chrome.runtime.sendMessage({ type: "SAVE_SESSION" }, (response) => {
-        if (!response) return;
+    const rawName = sessionNameInput.value.trim();
 
-        status.textContent = `탭 ${response.count}개 저장됨`;
-        status.classList.remove("hidden");
+    chrome.runtime.sendMessage(
+        {
+            type: "SAVE_SESSION",
+            name: rawName
+        },
+        (response) => {
+            if (!response) return;
 
-        setTimeout(() => {
-            status.classList.add("hidden");
-        }, 2000);
+            status.textContent = `탭 ${response.count}개 저장됨`;
+            status.classList.remove("hidden");
 
-        renderSessionList();
-    });
+            setTimeout(() => {
+                status.classList.add("hidden");
+            }, 2000);
+
+            // 입력값 초기화
+            sessionNameInput.value = "";
+
+            renderSessionList();
+        }
+    );
 });
 
 /**
- * 세션 목록을 렌더링한다.
- * - sessions가 없으면 빈 상태 메시지 표시
- * - 각 세션에 [열기] 버튼 제공
+ * 세션 목록 렌더링
  */
 function renderSessionList() {
     chrome.storage.local.get("sessions", (data) => {
@@ -84,13 +93,14 @@ function renderSessionList() {
               ${safeName}
               <span class="sessionMeta">(${count})</span>
             </div>
-            <button class="openBtn" data-session-id="${safeId}">열기</button>
+            <button class="openBtn" data-session-id="${safeId}">
+              열기
+            </button>
           </li>
         `;
             })
             .join("");
 
-        // 리스트 렌더 후 버튼 이벤트 바인딩
         sessionList.querySelectorAll(".openBtn").forEach((btn) => {
             btn.addEventListener("click", onClickOpenSession);
         });
@@ -98,8 +108,7 @@ function renderSessionList() {
 }
 
 /**
- * [열기] 버튼 클릭 처리
- * - 현재 저장된 옵션(openInNewWindow)을 함께 전달
+ * [열기] 클릭 → 세션 복원
  */
 function onClickOpenSession(e) {
     const sessionId = e.currentTarget.dataset.sessionId;
@@ -114,7 +123,7 @@ function onClickOpenSession(e) {
 }
 
 /**
- * 간단한 HTML 이스케이프 (popup 렌더 안전용)
+ * HTML escape
  */
 function escapeHtml(value) {
     return String(value)
