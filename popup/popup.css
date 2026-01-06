@@ -6,13 +6,15 @@ body {
 
 h1 {
     font-size: 14px;
-    margin: 0 0 10px 0;
+    margin-bottom: 10px;
 }
 
-.row {
-    display: block;
-    margin-bottom: 10px;
+input[type="text"] {
+    width: 100%;
+    padding: 4px 6px;
+    margin-bottom: 6px;
     font-size: 12px;
+    box-sizing: border-box;
 }
 
 button {
@@ -22,14 +24,18 @@ button {
     cursor: pointer;
 }
 
-#status {
-    margin: 6px 0 0 0;
+.row {
     font-size: 12px;
-    color: #2e7d32;
+    margin-bottom: 8px;
 }
 
 .hidden {
     display: none;
+}
+
+#status {
+    font-size: 12px;
+    color: #2e7d32;
 }
 
 .section {
@@ -41,57 +47,45 @@ button {
 .sectionTitle {
     font-size: 12px;
     font-weight: 600;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .list {
     list-style: none;
     padding: 0;
     margin: 0;
-    max-height: 220px;
-    overflow-y: auto;
 }
 
 .list li {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     padding: 6px 0;
-    border-bottom: 1px dashed #f0f0f0;
-}
-
-.list li:last-child {
-    border-bottom: none;
+    border-bottom: 1px dashed #eee;
 }
 
 .sessionName {
     flex: 1;
     font-size: 12px;
-    line-height: 1.2;
 }
 
 .sessionMeta {
     font-size: 11px;
     opacity: 0.7;
-    margin-left: 6px;
 }
 
-.openBtn {
-    padding: 6px 8px;
-    font-size: 12px;
+.iconBtn {
+    background: none;
+    border: none;
     cursor: pointer;
+    font-size: 14px;
 }
 
-.hint {
-    margin: 8px 0 0 0;
-    font-size: 12px;
+.iconBtn:hover {
     opacity: 0.7;
 }
 
-input[type="text"] {
-    width: 100%;
-    padding: 6px 8px;
-    margin-bottom: 8px;
-    box-sizing: border-box;
+.hint {
     font-size: 12px;
+    opacity: 0.6;
 }

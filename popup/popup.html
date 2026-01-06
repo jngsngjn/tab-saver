@@ -13,17 +13,18 @@
         placeholder="탭 꾸러미 이름 (선택)"
 />
 
-<label class="row">
-    <input type="checkbox" id="newWindowCheckbox" />
-    새 창에서 복원
-</label>
-
 <button id="saveBtn">현재 탭 저장</button>
 
 <p id="status" class="hidden"></p>
 
 <div class="section">
     <div class="sectionTitle">탭 꾸러미</div>
+
+    <label class="row">
+        <input type="checkbox" id="newWindowCheckbox" />
+        새 창에서 복원
+    </label>
+
     <ul id="sessionList" class="list"></ul>
     <p id="emptyHint" class="hint hidden">저장된 탭 꾸러미가 없어요.</p>
 </div>

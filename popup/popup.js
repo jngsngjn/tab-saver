@@ -1,79 +1,48 @@
-/**
- * 저장 결과 메시지
- */
 const status = document.getElementById("status");
-
-/**
- * 세션 이름 입력
- */
 const sessionNameInput = document.getElementById("sessionNameInput");
-
-/**
- * "새 창에서 복원" 옵션 체크박스
- */
 const checkbox = document.getElementById("newWindowCheckbox");
 
-/**
- * 세션 목록 UI
- */
 const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
 
-/**
- * popup 로드 시 초기화
- */
+/* 초기 로드 */
 chrome.storage.local.get("openInNewWindow", (data) => {
     checkbox.checked = Boolean(data.openInNewWindow);
 });
 renderSessionList();
 
-/**
- * 체크박스 상태 저장
- */
+/* 체크박스 상태 저장 */
 checkbox.addEventListener("change", () => {
     chrome.storage.local.set({
         openInNewWindow: checkbox.checked
     });
 });
 
-/**
- * [현재 탭 저장] 클릭
- * - 입력한 이름을 함께 전달
- */
+/* 세션 저장 */
 document.getElementById("saveBtn").addEventListener("click", () => {
-    const rawName = sessionNameInput.value.trim();
+    const name = sessionNameInput.value.trim();
 
     chrome.runtime.sendMessage(
-        {
-            type: "SAVE_SESSION",
-            name: rawName
-        },
+        { type: "SAVE_SESSION", name },
         (response) => {
             if (!response) return;
 
             status.textContent = `탭 ${response.count}개 저장됨`;
             status.classList.remove("hidden");
 
-            setTimeout(() => {
-                status.classList.add("hidden");
-            }, 2000);
-
-            // 입력값 초기화
+            setTimeout(() => status.classList.add("hidden"), 2000);
             sessionNameInput.value = "";
-
             renderSessionList();
         }
     );
 });
 
-/**
- * 세션 목록 렌더링
- */
+/* 세션 목록 렌더링 */
 function renderSessionList() {
     chrome.storage.local.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
 
-        if (sessions.length === 0) {
+        if (!sessions.length) {
             sessionList.innerHTML = "";
             emptyHint.classList.remove("hidden");
             return;
@@ -82,36 +51,32 @@ function renderSessionList() {
         emptyHint.classList.add("hidden");
 
         sessionList.innerHTML = sessions
-            .map((s) => {
-                const count = Array.isArray(s.urls) ? s.urls.length : 0;
-                const safeName = escapeHtml(s.name || "Untitled");
-                const safeId = escapeHtml(s.id);
-
-                return `
-          <li>
-            <div class="sessionName">
-              ${safeName}
-              <span class="sessionMeta">(${count})</span>
-            </div>
-            <button class="openBtn" data-session-id="${safeId}">
-              열기
-            </button>
-          </li>
-        `;
-            })
+            .map(s => `
+        <li>
+          <div class="sessionName">
+            ${escapeHtml(s.name)}
+            <span class="sessionMeta">(${s.urls.length})</span>
+          </div>
+          <button class="iconBtn openBtn" data-id="${s.id}">▶</button>
+          <button class="iconBtn deleteBtn" data-id="${s.id}" data-name="${escapeHtml(
+                s.name
+            )}">🗑</button>
+        </li>
+      `)
             .join("");
 
-        sessionList.querySelectorAll(".openBtn").forEach((btn) => {
-            btn.addEventListener("click", onClickOpenSession);
-        });
+        sessionList.querySelectorAll(".openBtn").forEach(btn =>
+            btn.addEventListener("click", onOpen)
+        );
+        sessionList.querySelectorAll(".deleteBtn").forEach(btn =>
+            btn.addEventListener("click", onDelete)
+        );
     });
 }
 
-/**
- * [열기] 클릭 → 세션 복원
- */
-function onClickOpenSession(e) {
-    const sessionId = e.currentTarget.dataset.sessionId;
+/* 열기 */
+function onOpen(e) {
+    const sessionId = e.currentTarget.dataset.id;
 
     chrome.storage.local.get("openInNewWindow", (data) => {
         chrome.runtime.sendMessage({
@@ -122,9 +87,20 @@ function onClickOpenSession(e) {
     });
 }
 
-/**
- * HTML escape
- */
+/* 삭제 */
+function onDelete(e) {
+    const sessionId = e.currentTarget.dataset.id;
+    const name = e.currentTarget.dataset.name;
+
+    if (!confirm(`"${name}" 탭 꾸러미를 삭제할까요?`)) return;
+
+    chrome.runtime.sendMessage(
+        { type: "DELETE_SESSION", sessionId },
+        () => renderSessionList()
+    );
+}
+
+/* HTML escape */
 function escapeHtml(value) {
     return String(value)
         .replaceAll("&", "&amp;")
