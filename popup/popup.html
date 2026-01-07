@@ -2,31 +2,47 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="stylesheet" href="popup.css" />
 </head>
 <body>
-<h1>Tab Saver</h1>
 
-<input
-        id="sessionNameInput"
-        type="text"
-        placeholder="탭 꾸러미 이름 (선택)"
-/>
+<div class="card">
+    <header class="header">
+        <div>
+            <div class="title">Tab Saver</div>
+            <div class="sub">현재 탭을 꾸러미로 저장</div>
+        </div>
+    </header>
 
-<button id="saveBtn">현재 탭 저장</button>
+    <section class="section">
+        <input
+                id="sessionNameInput"
+                class="input"
+                type="text"
+                placeholder="탭 꾸러미 이름 (선택)"
+        />
 
-<p id="status" class="hidden"></p>
+        <button id="saveBtn" class="btn primary">
+            현재 탭 저장
+        </button>
+    </section>
+</div>
 
-<div class="section">
-    <div class="sectionTitle">탭 꾸러미</div>
+<div id="status" class="toast hidden"></div>
 
-    <label class="row">
-        <input type="checkbox" id="newWindowCheckbox" />
-        새 창에서 복원
-    </label>
+<div class="card">
+    <section class="section">
+        <div class="sectionTitle">저장된 탭 꾸러미</div>
 
-    <ul id="sessionList" class="list"></ul>
-    <p id="emptyHint" class="hint hidden">저장된 탭 꾸러미가 없어요.</p>
+        <div class="toggle">
+            <label for="newWindowCheckbox">새 창에서 복원</label>
+            <input type="checkbox" id="newWindowCheckbox" />
+        </div>
+
+        <ul id="sessionList" class="list"></ul>
+        <p id="emptyHint" class="hint hidden">저장된 탭 꾸러미가 없어요.</p>
+    </section>
 </div>
 
 <script src="popup.js"></script>

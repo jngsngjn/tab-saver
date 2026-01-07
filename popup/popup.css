@@ -1,128 +1,256 @@
-body {
-    width: 260px;
-    padding: 10px;
-    font-family: sans-serif;
+:root{
+    --bg:#0b0f17;
+    --card:#111827;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --border:rgba(148,163,184,.18);
+    --accent:#60a5fa;
+    --accent2:#22c55e;
+    --danger:#ef4444;
+    --radius:14px;
+    --shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
-h1 {
-    font-size: 14px;
-    margin-bottom: 10px;
+@media (prefers-color-scheme: light){
+    :root{
+        --bg:#f8fafc;
+        --card:#ffffff;
+        --text:#0f172a;
+        --muted:#64748b;
+        --border:rgba(15,23,42,.12);
+        --shadow:0 10px 25px rgba(2,6,23,.08);
+    }
 }
 
-input[type="text"] {
-    width: 100%;
-    padding: 4px 6px;
-    margin-bottom: 6px;
-    font-size: 12px;
-    box-sizing: border-box;
+*{ box-sizing:border-box; }
+
+body{
+    margin:0;
+    width:360px;
+    padding:12px;
+    background:var(--bg);
+    color:var(--text);
+    font:13px/1.45 system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
 }
 
-button {
-    width: 100%;
-    margin-bottom: 8px;
-    padding: 8px;
-    cursor: pointer;
+.hidden{ display:none !important; }
+
+/* Card */
+.card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    margin-bottom:10px;
 }
 
-.row {
-    font-size: 12px;
-    margin-bottom: 8px;
+/* Header */
+.header{ padding:12px; }
+.title{ font-size:15px; font-weight:800; }
+.sub{ font-size:12px; color:var(--muted); }
+
+/* Section */
+.section{
+    padding:12px;
+    border-top:1px solid var(--border);
+}
+.section:first-child{ border-top:none; }
+
+.sectionTitle{
+    font-size:12px;
+    font-weight:700;
+    margin-bottom:8px;
 }
 
-.hidden {
-    display: none;
+/* Input */
+.input{
+    width:100%;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(148,163,184,.06);
+    color:var(--text);
+    margin-bottom:8px;
+}
+.input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px rgba(96,165,250,.2);
 }
 
-#status {
-    font-size: 12px;
-    color: #2e7d32;
+/* Buttons */
+.btn{
+    width:100%;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(148,163,184,.08);
+    color:var(--text);
+    font-weight:700;
+    cursor:pointer;
+}
+.btn:hover{ background:rgba(148,163,184,.14); }
+
+.btn.primary{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    border:none;
+}
+.btn.primary:hover{ filter:brightness(1.05); }
+
+/* Toggle */
+.toggle{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    background:rgba(148,163,184,.05);
+    font-size:12px;
+    margin-bottom:10px;
 }
 
-.section {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #eee;
+/* List */
+.list{
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
 }
 
-.sectionTitle {
-    font-size: 12px;
-    font-weight: 600;
-    margin-bottom: 6px;
+.sessionItem{
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:8px;
+    background:rgba(148,163,184,.04);
 }
 
-.list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+.sessionHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
 }
 
-.list li {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 0;
-    border-bottom: 1px dashed #eee;
+.sessionName{
+    font-weight:700;
+    font-size:13px;
+}
+.sessionMeta{
+    font-size:11px;
+    color:var(--muted);
+    margin-left:4px;
 }
 
-.sessionName {
-    flex: 1;
-    font-size: 12px;
+.actions{
+    display:flex;
+    gap:6px;
+    align-items:center;
 }
 
-.sessionMeta {
-    font-size: 11px;
-    opacity: 0.7;
+/* Open */
+.openBtn{
+    padding:6px 12px;
+    border-radius:10px;
+    border:1px solid rgba(96,165,250,.45);
+    background:rgba(96,165,250,.22);
+    color:#bfdbfe;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;              /* ✅ 커서 문제 해결 */
+    white-space:nowrap;
+}
+.openBtn:hover{
+    background:rgba(96,165,250,.32);
 }
 
-.iconBtn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 14px;
+/* Delete */
+.deleteBtn{
+    padding:6px 10px;
+    border-radius:10px;
+    border:1px solid rgba(239,68,68,.45);
+    background:rgba(239,68,68,.18);
+    color:#fecaca;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;          /* ✅ 세로 글자 방지 */
+}
+.deleteBtn:hover{
+    background:rgba(239,68,68,.3);
 }
 
-.iconBtn:hover {
-    opacity: 0.7;
+/* Domain */
+.domainList{
+    margin-top:6px;
+    padding-left:10px;
+}
+.domainItem{
+    font-size:11px;
+    color:var(--muted);
+    padding:2px 0;
+    cursor:pointer;
+    user-select:none;
+}
+.domainItem:hover{
+    color:var(--accent);
+    background:rgba(96,165,250,.08);
+    border-radius:6px;
+    padding-left:4px;
+}
+.domainItem:active{
+    background:rgba(96,165,250,.18);
 }
 
-.hint {
-    font-size: 12px;
-    opacity: 0.6;
+/* Toast */
+.toast{
+    position:fixed;
+    left:12px;
+    right:12px;
+    bottom:12px;
+    padding:10px 12px;
+    border-radius:12px;
+    background:rgba(17,24,39,.92);
+    color:var(--accent2);
+    font-weight:800;
+    text-align:center;
+    box-shadow:var(--shadow);
+}
+@media (prefers-color-scheme: light){
+    .toast{ background:rgba(255,255,255,.92); }
 }
 
-.sessionItem {
-    padding-bottom: 6px;
+/* Hint */
+.hint{
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+    margin-top:8px;
 }
 
-.sessionHeader {
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-}
+@media (prefers-color-scheme: light) {
 
-.actions {
-    display: flex;
-    gap: 4px;
-}
+    /* 열기 버튼 – 더 진한 파랑 */
+    .openBtn{
+        background: #e0edff;          /* 연한 파랑 배경 */
+        border-color: #93c5fd;        /* 파랑 테두리 */
+        color: #1d4ed8;               /* 진한 파랑 텍스트 */
+    }
 
-.domainList {
-    margin: 4px 0 0 0;
-    padding-left: 12px;
-}
+    .openBtn:hover{
+        background: #cfe2ff;
+    }
 
-.domainItem {
-    font-size: 11px;
-    opacity: 0.85;
-    padding: 2px 0;
-    cursor: pointer;
-}
+    /* 삭제 버튼 – 명확한 레드 */
+    .deleteBtn{
+        background: #fee2e2;          /* 연한 레드 */
+        border-color: #fca5a5;
+        color: #b91c1c;               /* 진한 레드 텍스트 */
+    }
 
-.domainItem:hover {
-    text-decoration: underline;
-}
-
-.editInput {
-    font-size: 12px;
-    padding: 2px 4px;
-    width: 140px;
+    .deleteBtn:hover{
+        background: #fecaca;
+    }
 }
