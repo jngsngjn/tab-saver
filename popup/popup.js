@@ -5,6 +5,8 @@ const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
 const status = document.getElementById("status");
 
+let draggedItem = null;
+
 /* ===== Init ===== */
 chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
     checkbox.checked = Boolean(openInNewWindow);
@@ -71,7 +73,10 @@ function renderSessionItem(session) {
         .join("");
 
     return `
-<li class="sessionItem">
+<li class="sessionItem"
+    data-id="${session.id}"
+    draggable="true">
+
     <div class="sessionHeader">
         <div class="sessionName">
             <span class="arrow">▶</span>
@@ -88,7 +93,6 @@ function renderSessionItem(session) {
     <ul class="domainList hidden">${domains}</ul>
 </li>
 `;
-
 }
 
 /* ===== Binding ===== */
@@ -104,6 +108,15 @@ function bindSessionEvents() {
 
     sessionList.querySelectorAll(".domainItem")
         .forEach(el => el.addEventListener("click", onDomainClick));
+
+    // ✅ Drag & Drop
+    sessionList.querySelectorAll(".sessionItem")
+        .forEach(el => {
+            el.addEventListener("dragstart", onDragStart);
+            el.addEventListener("dragover", onDragOver);
+            el.addEventListener("drop", onDrop);
+            el.addEventListener("dragend", onDragEnd);
+        });
 }
 
 /* ===== Actions ===== */
@@ -199,4 +212,65 @@ function showToast(message, type = "success") {
     status._timer = setTimeout(() => {
         status.classList.remove("show");
     }, 1500);
+}
+function onDragStart(e) {
+    draggedItem = e.currentTarget;
+    draggedItem.classList.add("dragging");
+
+    // 아코디언 열려 있으면 닫기
+    draggedItem.classList.remove("open");
+    draggedItem.querySelector(".domainList")?.classList.add("hidden");
+
+    e.dataTransfer.effectAllowed = "move";
+}
+
+function onDragOver(e) {
+    e.preventDefault();
+
+    const target = e.currentTarget;
+    if (target === draggedItem) return;
+
+    target.classList.add("dragOver");
+
+    const rect = target.getBoundingClientRect();
+    const isAfter = e.clientY > rect.top + rect.height / 2;
+
+    const referenceNode = isAfter ? target.nextSibling : target;
+    if (referenceNode !== draggedItem) {
+        sessionList.insertBefore(draggedItem, referenceNode);
+    }
+}
+
+function onDrop(e) {
+    e.preventDefault();
+    e.currentTarget.classList.remove("dragOver");
+    saveNewOrder();
+}
+
+function onDragEnd() {
+    document.querySelectorAll(".sessionItem")
+        .forEach(el => {
+            el.classList.remove("dragging");
+            el.classList.remove("dragOver");
+        });
+
+    draggedItem = null;
+}
+function saveNewOrder() {
+    const orderedIds = [...sessionList.querySelectorAll(".sessionItem")]
+        .map(el => el.dataset.id);
+
+    chrome.storage.local.get("sessions", ({ sessions }) => {
+        if (!Array.isArray(sessions)) return;
+
+        const map = Object.fromEntries(
+            sessions.map(s => [s.id, s])
+        );
+
+        const reordered = orderedIds
+            .map(id => map[id])
+            .filter(Boolean);
+
+        chrome.storage.local.set({ sessions: reordered });
+    });
 }

@@ -381,3 +381,20 @@ body{
         background:#fecaca;
     }
 }
+/* =====================
+   Drag & Drop
+===================== */
+
+.sessionItem{
+    transition:transform .15s ease, opacity .15s ease;
+}
+
+.sessionItem.dragging{
+    opacity:.4;
+    transform:scale(.98);
+}
+
+.sessionItem.dragOver{
+    outline:2px dashed var(--accent);
+    outline-offset:2px;
+}
