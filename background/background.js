@@ -46,7 +46,8 @@ function saveSession(sendResponse, nameFromPopup) {
                     (url.startsWith("http://") || url.startsWith("https://"))
             );
 
-        if (!urls.length) {
+        // ✅ 1차 방어
+        if (urls.length === 0) {
             sendResponse({
                 success: false,
                 reason: "NO_VALID_TABS"
@@ -55,6 +56,15 @@ function saveSession(sendResponse, nameFromPopup) {
         }
 
         chrome.storage.local.get("sessions", (data) => {
+            // ✅ 2차 방어 (안전장치)
+            if (urls.length === 0) {
+                sendResponse({
+                    success: false,
+                    reason: "NO_VALID_TABS"
+                });
+                return;
+            }
+
             const sessions = Array.isArray(data.sessions) ? data.sessions : [];
 
             const createdAt = Date.now();
