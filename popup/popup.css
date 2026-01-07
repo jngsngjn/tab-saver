@@ -120,3 +120,9 @@ button {
 .domainItem:hover {
     text-decoration: underline;
 }
+
+.editInput {
+    font-size: 12px;
+    padding: 2px 4px;
+    width: 140px;
+}

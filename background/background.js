@@ -26,6 +26,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         deleteSession(message.sessionId, sendResponse);
         return true;
     }
+
+    if (message.type === "RENAME_SESSION") {
+        renameSession(message.sessionId, message.name, sendResponse);
+        return true;
+    }
 });
 
 /**
@@ -151,4 +156,21 @@ function formatSessionName(timestamp) {
     ).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(
         d.getMinutes()
     ).padStart(2, "0")}`;
+}
+
+function renameSession(sessionId, newName, sendResponse) {
+    if (!sessionId || !newName) return;
+
+    chrome.storage.local.get("sessions", (data) => {
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+
+        const target = sessions.find(s => s.id === sessionId);
+        if (!target) return;
+
+        target.name = newName;
+
+        chrome.storage.local.set({ sessions }, () => {
+            sendResponse({ success: true });
+        });
+    });
 }

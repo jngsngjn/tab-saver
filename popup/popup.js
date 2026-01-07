@@ -52,26 +52,36 @@ function renderSessionList() {
 
         sessionList.innerHTML = sessions
             .map((s) => {
-                const domainMap = countDomains(s.urls);
+                const safeName = escapeHtml(s.name || "Untitled");
+                const urls = Array.isArray(s.urls) ? s.urls : [];
+                const count = urls.length;
 
+                const domainMap = countDomains(urls);
                 const domainListHtml = Object.entries(domainMap)
                     .map(
-                        ([domain, count]) =>
-                            `<li class="domainItem" data-session-id="${s.id}" data-domain="${domain}">${domain} (${count})</li>`
+                        ([domain, domainCount]) =>
+                            `<li class="domainItem"
+                   data-session-id="${s.id}"
+                   data-domain="${domain}">
+                   ${domain} (${domainCount})
+               </li>`
                     )
                     .join("");
+
                 return `
           <li class="sessionItem">
             <div class="sessionHeader" data-id="${s.id}">
               <div class="sessionName">
-                ${escapeHtml(s.name)}
-                <span class="sessionMeta">(${s.urls.length})</span>
+                <span class="nameText">${safeName}</span>
+                <span class="sessionMeta">(${count})</span>
               </div>
+
               <div class="actions">
-                <button class="iconBtn openBtn" data-id="${s.id}">▶</button>
-                <button class="iconBtn deleteBtn" data-id="${s.id}" data-name="${escapeHtml(
-                    s.name
-                )}">🗑</button>
+                <button class="openBtn">열기</button>
+                <button class="iconBtn editBtn" data-id="${s.id}">✏️</button>
+                <button class="iconBtn deleteBtn"
+                        data-id="${s.id}"
+                        data-name="${safeName}">🗑</button>
               </div>
             </div>
 
@@ -95,12 +105,14 @@ function bindSessionEvents() {
     sessionList.querySelectorAll(".deleteBtn").forEach(btn =>
         btn.addEventListener("click", onDelete)
     );
-
     sessionList.querySelectorAll(".sessionHeader").forEach(header =>
         header.addEventListener("click", onToggle)
     );
     sessionList.querySelectorAll(".domainItem").forEach(item =>
         item.addEventListener("click", onDomainClick)
+    );
+    sessionList.querySelectorAll(".editBtn").forEach(btn =>
+        btn.addEventListener("click", onEdit)
     );
 }
 
@@ -116,6 +128,7 @@ function onToggle(e) {
 }
 
 /* 열기 */
+열기 안 됨
 function onOpen(e) {
     e.stopPropagation();
     const sessionId = e.currentTarget.dataset.id;
@@ -179,4 +192,49 @@ function onDomainClick(e) {
             openInNewWindow: Boolean(data.openInNewWindow)
         });
     });
+}
+
+function onEdit(e) {
+    e.stopPropagation();
+
+    const sessionId = e.currentTarget.dataset.id;
+    const nameContainer = e.currentTarget
+        .closest("li")
+        .querySelector(".sessionName");
+
+    const textEl = nameContainer.querySelector(".nameText");
+    const oldName = textEl.textContent;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = oldName;
+    input.className = "editInput";
+
+    nameContainer.replaceChild(input, textEl);
+    input.focus();
+    input.select();
+
+    const commit = () => {
+        const newName = input.value.trim();
+        if (!newName || newName === oldName) {
+            cancel();
+            return;
+        }
+
+        chrome.runtime.sendMessage(
+            { type: "RENAME_SESSION", sessionId, name: newName },
+            () => renderSessionList()
+        );
+    };
+
+    const cancel = () => {
+        nameContainer.replaceChild(textEl, input);
+    };
+
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") commit();
+        if (e.key === "Escape") cancel();
+    });
+
+    input.addEventListener("blur", commit);
 }
