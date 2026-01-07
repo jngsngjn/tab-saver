@@ -11,7 +11,7 @@
     <header class="header">
         <div>
             <div class="title">Tab Saver</div>
-            <div class="sub">현재 탭을 꾸러미로 저장</div>
+            <div class="sub">현재 탭을 저장하고, 편리하게 복원하세요!</div>
         </div>
     </header>
 
@@ -23,10 +23,7 @@
                     type="text"
                     placeholder="탭 꾸러미 이름 (선택)"
             />
-
-            <button id="saveBtn" class="btn primary saveBtn">
-                저장
-            </button>
+            <button id="saveBtn" class="btn primary saveBtn">저장</button>
         </div>
 
         <div id="status" class="toast"></div>
@@ -35,15 +32,17 @@
 
 <div class="card">
     <section class="section">
-        <div class="sectionTitle">저장된 탭 꾸러미</div>
+        <div class="sectionHeader">
+            <div class="sectionTitle">저장된 탭</div>
 
-        <div class="toggle">
-            <label for="newWindowCheckbox">새 창에서 복원</label>
-            <input type="checkbox" id="newWindowCheckbox" />
+            <label class="toggle inline">
+                <input type="checkbox" id="newWindowCheckbox" />
+                <span>새 창에서 복원</span>
+            </label>
         </div>
 
         <ul id="sessionList" class="list"></ul>
-        <p id="emptyHint" class="hint hidden">저장된 탭 꾸러미가 없어요.</p>
+        <p id="emptyHint" class="hint hidden">저장된 탭이 없어요.</p>
     </section>
 </div>
 

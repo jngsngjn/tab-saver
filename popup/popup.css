@@ -1,12 +1,17 @@
+/* =====================
+   Theme Variables
+===================== */
 :root{
     --bg:#0b0f17;
     --card:#111827;
     --text:#e5e7eb;
     --muted:#94a3b8;
     --border:rgba(148,163,184,.18);
+
     --accent:#60a5fa;
     --accent2:#22c55e;
     --danger:#ef4444;
+
     --radius:14px;
     --shadow:0 10px 25px rgba(0,0,0,.35);
 }
@@ -22,6 +27,9 @@
     }
 }
 
+/* =====================
+   Base
+===================== */
 *{ box-sizing:border-box; }
 
 body{
@@ -35,7 +43,9 @@ body{
 
 .hidden{ display:none !important; }
 
-/* Card */
+/* =====================
+   Card Layout
+===================== */
 .card{
     background:var(--card);
     border:1px solid var(--border);
@@ -44,43 +54,70 @@ body{
     margin-bottom:10px;
 }
 
-/* Header */
+/* =====================
+   Header
+===================== */
 .header{ padding:12px; }
-.title{ font-size:15px; font-weight:800; }
-.sub{ font-size:12px; color:var(--muted); }
 
-/* Section */
+.title{
+    font-size:15px;
+    font-weight:800;
+}
+
+.sub{
+    font-size:12px;
+    color:var(--muted);
+}
+
+/* =====================
+   Section
+===================== */
 .section{
     padding:12px;
     border-top:1px solid var(--border);
 }
 .section:first-child{ border-top:none; }
 
+.sectionHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
 .sectionTitle{
     font-size:12px;
     font-weight:700;
-    margin-bottom:8px;
 }
 
-/* Input */
+/* =====================
+   Input & Save Row
+===================== */
+.saveRow{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
 .input{
-    width:100%;
+    flex:1;
     padding:10px;
     border-radius:12px;
     border:1px solid var(--border);
     background:rgba(148,163,184,.06);
     color:var(--text);
-    margin-bottom:8px;
 }
+
 .input:focus{
     outline:none;
     border-color:var(--accent);
     box-shadow:0 0 0 3px rgba(96,165,250,.2);
 }
 
-/* Buttons */
+/* =====================
+   Buttons
+===================== */
 .btn{
-    width:100%;
     padding:10px;
     border-radius:12px;
     border:1px solid var(--border);
@@ -89,28 +126,49 @@ body{
     font-weight:700;
     cursor:pointer;
 }
-.btn:hover{ background:rgba(148,163,184,.14); }
+
+.btn:hover{
+    background:rgba(148,163,184,.14);
+}
 
 .btn.primary{
     background:linear-gradient(180deg,#60a5fa,#3b82f6);
     border:none;
 }
-.btn.primary:hover{ filter:brightness(1.05); }
 
-/* Toggle */
-.toggle{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:10px;
-    border-radius:12px;
-    border:1px solid var(--border);
-    background:rgba(148,163,184,.05);
-    font-size:12px;
-    margin-bottom:10px;
+.btn.primary:hover{
+    filter:brightness(1.05);
 }
 
-/* List */
+.saveBtn{
+    width:auto;
+    padding:10px 14px;
+    white-space:nowrap;
+}
+
+/* =====================
+   Toggle
+===================== */
+.toggle{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    font-size:11px;
+}
+
+.toggle.inline{
+    padding:0;
+    border:none;
+    background:none;
+}
+
+.toggle input{
+    margin:0;
+}
+
+/* =====================
+   Session List
+===================== */
 .list{
     list-style:none;
     padding:0;
@@ -138,6 +196,7 @@ body{
     font-weight:700;
     font-size:13px;
 }
+
 .sessionMeta{
     font-size:11px;
     color:var(--muted);
@@ -147,46 +206,51 @@ body{
 .actions{
     display:flex;
     gap:6px;
-    align-items:center;
+}
+
+/* =====================
+   Open / Delete Buttons
+===================== */
+.openBtn,
+.deleteBtn{
+    padding:6px 12px;
+    border-radius:10px;
+    font-size:11px;
+    font-weight:700;
+    cursor:pointer;
+    white-space:nowrap;
 }
 
 /* Open */
 .openBtn{
-    padding:6px 12px;
-    border-radius:10px;
     border:1px solid rgba(96,165,250,.45);
     background:rgba(96,165,250,.22);
     color:#bfdbfe;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;              /* ✅ 커서 문제 해결 */
-    white-space:nowrap;
 }
+
 .openBtn:hover{
     background:rgba(96,165,250,.32);
 }
 
 /* Delete */
 .deleteBtn{
-    padding:6px 12px;
-    border-radius:10px;
     border:1px solid rgba(239,68,68,.45);
     background:rgba(239,68,68,.18);
     color:#fecaca;
-    font-size:11px;
-    font-weight:700;
-    cursor:pointer;
-    white-space:nowrap;          /* ✅ 세로 글자 방지 */
 }
+
 .deleteBtn:hover{
     background:rgba(239,68,68,.3);
 }
 
-/* Domain */
+/* =====================
+   Domain List
+===================== */
 .domainList{
     margin-top:6px;
     padding-left:10px;
 }
+
 .domainItem{
     font-size:11px;
     color:var(--muted);
@@ -194,22 +258,25 @@ body{
     cursor:pointer;
     user-select:none;
 }
+
 .domainItem:hover{
     color:var(--accent);
     background:rgba(96,165,250,.08);
     border-radius:6px;
     padding-left:4px;
 }
+
 .domainItem:active{
     background:rgba(96,165,250,.18);
 }
 
-/* Toast */
+/* =====================
+   Toast
+===================== */
 .toast{
     margin-top:8px;
     padding:10px 12px;
     min-height:38px;
-    box-sizing:border-box;
 
     border-radius:12px;
     background:rgba(17,24,39,.92);
@@ -221,9 +288,7 @@ body{
     transform:translateY(-4px);
     pointer-events:none;
 
-    transition:
-            opacity .2s ease,
-            transform .2s ease;
+    transition:opacity .2s ease, transform .2s ease;
 }
 
 .toast.show{
@@ -231,25 +296,18 @@ body{
     transform:translateY(0);
 }
 
+.toast.success{
+    color:var(--accent2);
+}
+
 .toast.error{
     color:var(--danger);
     background:rgba(239,68,68,.12);
 }
 
-.toast.success{
-    color:var(--accent2);
-}
-
-@media (prefers-color-scheme: light){
-    .toast{
-        background:rgba(255,255,255,.92);
-    }
-    .toast.error{
-        background:#fee2e2;
-    }
-}
-
-/* Hint */
+/* =====================
+   Hint
+===================== */
 .hint{
     font-size:12px;
     color:var(--muted);
@@ -257,46 +315,36 @@ body{
     margin-top:8px;
 }
 
-@media (prefers-color-scheme: light) {
+/* =====================
+   Light Mode Overrides
+===================== */
+@media (prefers-color-scheme: light){
 
-    /* 열기 버튼 – 더 진한 파랑 */
+    .toast{
+        background:rgba(255,255,255,.92);
+    }
+
+    .toast.error{
+        background:#fee2e2;
+    }
+
     .openBtn{
-        background: #e0edff;          /* 연한 파랑 배경 */
-        border-color: #93c5fd;        /* 파랑 테두리 */
-        color: #1d4ed8;               /* 진한 파랑 텍스트 */
+        background:#e0edff;
+        border-color:#93c5fd;
+        color:#1d4ed8;
     }
 
     .openBtn:hover{
-        background: #cfe2ff;
+        background:#cfe2ff;
     }
 
-    /* 삭제 버튼 – 명확한 레드 */
     .deleteBtn{
-        background: #fee2e2;          /* 연한 레드 */
-        border-color: #fca5a5;
-        color: #b91c1c;               /* 진한 레드 텍스트 */
+        background:#fee2e2;
+        border-color:#fca5a5;
+        color:#b91c1c;
     }
 
     .deleteBtn:hover{
-        background: #fecaca;
+        background:#fecaca;
     }
-}
-
-.saveRow{
-    display:flex;
-    gap:8px;
-    align-items:center;
-}
-
-/* 인풋은 최대한 넓게 */
-.saveRow .input{
-    flex:1;
-    margin-bottom:0; /* 기존 세로 여백 제거 */
-}
-
-/* 저장 버튼은 컴팩트하게 */
-.saveBtn{
-    width:auto;
-    padding:10px 14px;
-    white-space:nowrap;
 }

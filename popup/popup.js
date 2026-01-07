@@ -1,99 +1,95 @@
+/* ===== DOM ===== */
 const sessionNameInput = document.getElementById("sessionNameInput");
 const checkbox = document.getElementById("newWindowCheckbox");
 const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
+const status = document.getElementById("status");
 
-/* 초기 로드 */
-chrome.storage.local.get("openInNewWindow", (data) => {
-    checkbox.checked = Boolean(data.openInNewWindow);
+/* ===== Init ===== */
+chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
+    checkbox.checked = Boolean(openInNewWindow);
 });
+
 renderSessionList();
 
-/* 체크박스 상태 저장 */
+/* ===== Events ===== */
 checkbox.addEventListener("change", () => {
-    chrome.storage.local.set({
-        openInNewWindow: checkbox.checked
-    });
+    chrome.storage.local.set({ openInNewWindow: checkbox.checked });
 });
 
-/* 세션 저장 */
-document.getElementById("saveBtn").addEventListener("click", () => {
+document.getElementById("saveBtn").addEventListener("click", onSave);
+
+/* ===== Handlers ===== */
+function onSave() {
     const name = sessionNameInput.value.trim();
 
     chrome.runtime.sendMessage(
         { type: "SAVE_SESSION", name },
         (res) => {
             if (!res || res.success === false) {
-                showToast("저장할 수 있는 탭이 없어요", true);
+                showToast("저장할 수 있는 탭이 없어요", "error");
                 return;
             }
 
             sessionNameInput.value = "";
-            showToast(`탭 ${res.count}개 저장됨`);
+            showToast(`탭 ${res.count}개 저장됨`, "success");
             renderSessionList();
         }
     );
-});
+}
 
-/* 세션 목록 렌더링 */
+/* ===== Render ===== */
 function renderSessionList() {
-    chrome.storage.local.get("sessions", (data) => {
-        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+    chrome.storage.local.get("sessions", ({ sessions }) => {
+        const list = Array.isArray(sessions) ? sessions : [];
 
-        if (!sessions.length) {
+        if (!list.length) {
             sessionList.innerHTML = "";
             emptyHint.classList.remove("hidden");
             return;
         }
 
         emptyHint.classList.add("hidden");
-
-        sessionList.innerHTML = sessions.map(renderSessionItem).join("");
+        sessionList.innerHTML = list.map(renderSessionItem).join("");
         bindSessionEvents();
     });
 }
 
-function renderSessionItem(s) {
-    const safeName = escapeHtml(s.name || "Untitled");
-    const urls = Array.isArray(s.urls) ? s.urls : [];
-    const count = urls.length;
-
+function renderSessionItem(session) {
+    const name = escapeHtml(session.name || "Untitled");
+    const urls = Array.isArray(session.urls) ? session.urls : [];
     const domainMap = countDomains(urls);
-    const domainListHtml = Object.entries(domainMap)
-        .map(
-            ([domain, domainCount]) =>
-                `<li class="domainItem"
-          data-session-id="${s.id}"
-          data-domain="${domain}">
-          ${domain} (${domainCount})
-        </li>`
-        )
+
+    const domains = Object.entries(domainMap)
+        .map(([domain, count]) => `
+            <li class="domainItem"
+                data-session-id="${session.id}"
+                data-domain="${domain}">
+                ${domain} (${count})
+            </li>
+        `)
         .join("");
 
     return `
-    <li class="sessionItem">
-      <div class="sessionHeader">
-        <div class="sessionName">
-          <span>${safeName}</span>
-          <span class="sessionMeta">(${count})</span>
-        </div>
+        <li class="sessionItem">
+            <div class="sessionHeader">
+                <div class="sessionName">
+                    <span>${name}</span>
+                    <span class="sessionMeta">(${urls.length})</span>
+                </div>
 
-        <div class="actions">
-          <button class="openBtn" data-id="${s.id}">열기</button>
-          <button class="deleteBtn" data-id="${s.id}" data-name="${safeName}">
-            삭제
-          </button>
-        </div>
-      </div>
+                <div class="actions">
+                    <button class="openBtn" data-id="${session.id}">열기</button>
+                    <button class="deleteBtn" data-id="${session.id}">삭제</button>
+                </div>
+            </div>
 
-      <ul class="domainList hidden">
-        ${domainListHtml}
-      </ul>
-    </li>
-  `;
+            <ul class="domainList hidden">${domains}</ul>
+        </li>
+    `;
 }
 
-/* 이벤트 바인딩 */
+/* ===== Binding ===== */
 function bindSessionEvents() {
     sessionList.querySelectorAll(".openBtn")
         .forEach(btn => btn.addEventListener("click", onOpen));
@@ -102,69 +98,70 @@ function bindSessionEvents() {
         .forEach(btn => btn.addEventListener("click", onDelete));
 
     sessionList.querySelectorAll(".sessionHeader")
-        .forEach(header => header.addEventListener("click", onToggle));
+        .forEach(el => el.addEventListener("click", onToggle));
 
     sessionList.querySelectorAll(".domainItem")
-        .forEach(item => item.addEventListener("click", onDomainClick));
+        .forEach(el => el.addEventListener("click", onDomainClick));
 }
 
-/* 토글 */
+/* ===== Actions ===== */
 function onToggle(e) {
     if (e.target.closest("button")) return;
-    const item = e.currentTarget.closest(".sessionItem");
-    item.querySelector(".domainList").classList.toggle("hidden");
+    e.currentTarget.nextElementSibling.classList.toggle("hidden");
 }
 
-/* 열기 */
 function onOpen(e) {
     e.stopPropagation();
-    const sessionId = e.currentTarget.dataset.id;
-
-    chrome.storage.local.get("openInNewWindow", (data) => {
-        chrome.runtime.sendMessage({
-            type: "RESTORE_SESSION",
-            sessionId,
-            openInNewWindow: Boolean(data.openInNewWindow)
-        });
-    });
+    restoreSession(e.currentTarget.dataset.id);
 }
 
-/* 삭제 */
 function onDelete(e) {
     e.stopPropagation();
-    const sessionId = e.currentTarget.dataset.id;
-
     chrome.runtime.sendMessage(
-        { type: "DELETE_SESSION", sessionId },
+        { type: "DELETE_SESSION", sessionId: e.currentTarget.dataset.id },
         renderSessionList
     );
 }
 
-/* 도메인 */
 function onDomainClick(e) {
     e.stopPropagation();
-    const { sessionId, domain } = e.currentTarget.dataset;
+    restoreDomain(
+        e.currentTarget.dataset.sessionId,
+        e.currentTarget.dataset.domain
+    );
+}
 
-    chrome.storage.local.get("openInNewWindow", (data) => {
+/* ===== Restore ===== */
+function restoreSession(sessionId) {
+    chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
         chrome.runtime.sendMessage({
-            type: "RESTORE_DOMAIN",
+            type: "RESTORE_SESSION",
             sessionId,
-            domain,
-            openInNewWindow: Boolean(data.openInNewWindow)
+            openInNewWindow: Boolean(openInNewWindow)
         });
     });
 }
 
-/* Utils */
+function restoreDomain(sessionId, domain) {
+    chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
+        chrome.runtime.sendMessage({
+            type: "RESTORE_DOMAIN",
+            sessionId,
+            domain,
+            openInNewWindow: Boolean(openInNewWindow)
+        });
+    });
+}
+
+/* ===== Utils ===== */
 function countDomains(urls) {
-    const map = {};
-    urls.forEach((url) => {
+    return urls.reduce((map, url) => {
         try {
             const domain = new URL(url).hostname;
             map[domain] = (map[domain] || 0) + 1;
         } catch {}
-    });
-    return map;
+        return map;
+    }, {});
 }
 
 function escapeHtml(value) {
@@ -176,13 +173,9 @@ function escapeHtml(value) {
         .replaceAll("'", "&#039;");
 }
 
-const status = document.getElementById("status");
-
 function showToast(message, type = "success") {
     status.textContent = message;
-
-    status.classList.remove("success", "error");
-    status.classList.add(type, "show");
+    status.className = `toast ${type} show`;
 
     clearTimeout(status._timer);
     status._timer = setTimeout(() => {
