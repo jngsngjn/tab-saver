@@ -44,7 +44,7 @@ body{
 .hidden{ display:none !important; }
 
 /* =====================
-   Card Layout
+   Card
 ===================== */
 .card{
     background:var(--card);
@@ -76,6 +76,7 @@ body{
     padding:12px;
     border-top:1px solid var(--border);
 }
+
 .section:first-child{ border-top:none; }
 
 .sectionHeader{
@@ -91,7 +92,7 @@ body{
 }
 
 /* =====================
-   Input & Save Row
+   Save Row
 ===================== */
 .saveRow{
     display:flex;
@@ -141,7 +142,6 @@ body{
 }
 
 .saveBtn{
-    width:auto;
     padding:10px 14px;
     white-space:nowrap;
 }
@@ -156,15 +156,7 @@ body{
     font-size:11px;
 }
 
-.toggle.inline{
-    padding:0;
-    border:none;
-    background:none;
-}
-
-.toggle input{
-    margin:0;
-}
+.toggle input{ margin:0; }
 
 /* =====================
    Session List
@@ -185,6 +177,7 @@ body{
     background:rgba(148,163,184,.04);
 }
 
+/* Header */
 .sessionHeader{
     display:flex;
     justify-content:space-between;
@@ -193,6 +186,9 @@ body{
 }
 
 .sessionName{
+    display:flex;
+    align-items:center;
+    gap:6px;
     font-weight:700;
     font-size:13px;
 }
@@ -200,9 +196,20 @@ body{
 .sessionMeta{
     font-size:11px;
     color:var(--muted);
-    margin-left:4px;
 }
 
+/* Arrow */
+.arrow{
+    font-size:10px;
+    opacity:.6;
+    transition:transform .15s ease;
+}
+
+.sessionItem.open .arrow{
+    transform:rotate(90deg);
+}
+
+/* Actions */
 .actions{
     display:flex;
     gap:6px;
@@ -218,7 +225,6 @@ body{
     font-size:11px;
     font-weight:700;
     cursor:pointer;
-    white-space:nowrap;
 }
 
 /* Open */
@@ -244,30 +250,61 @@ body{
 }
 
 /* =====================
-   Domain List
+   Domain List (개선 핵심)
 ===================== */
 .domainList{
-    margin-top:6px;
-    padding-left:10px;
+    margin-top:8px;
+    padding:8px 10px;
+    background:rgba(148,163,184,.06);
+    border:1px solid var(--border);
+    border-radius:10px;
+
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+
+    overflow:hidden;
+    transition:
+            max-height .2s ease,
+            opacity .15s ease,
+            transform .15s ease;
+}
+
+.domainList.hidden{
+    max-height:0;
+    opacity:0;
+    padding-top:0;
+    padding-bottom:0;
+    border-width:0;
+    transform:translateY(-4px);
+}
+
+.domainList:not(.hidden){
+    max-height:200px;
+    opacity:1;
+    transform:translateY(0);
 }
 
 .domainItem{
     font-size:11px;
     color:var(--muted);
-    padding:2px 0;
+    padding:4px 6px;
+    border-radius:6px;
     cursor:pointer;
-    user-select:none;
+    display:flex;
+    align-items:center;
+    gap:6px;
+}
+
+.domainItem::before{
+    content:"🌐";
+    font-size:11px;
+    opacity:.6;
 }
 
 .domainItem:hover{
     color:var(--accent);
-    background:rgba(96,165,250,.08);
-    border-radius:6px;
-    padding-left:4px;
-}
-
-.domainItem:active{
-    background:rgba(96,165,250,.18);
+    background:rgba(96,165,250,.12);
 }
 
 /* =====================
@@ -277,7 +314,6 @@ body{
     margin-top:8px;
     padding:10px 12px;
     min-height:38px;
-
     border-radius:12px;
     background:rgba(17,24,39,.92);
     font-weight:700;
@@ -287,7 +323,6 @@ body{
     opacity:0;
     transform:translateY(-4px);
     pointer-events:none;
-
     transition:opacity .2s ease, transform .2s ease;
 }
 
@@ -296,9 +331,7 @@ body{
     transform:translateY(0);
 }
 
-.toast.success{
-    color:var(--accent2);
-}
+.toast.success{ color:var(--accent2); }
 
 .toast.error{
     color:var(--danger);
@@ -316,7 +349,7 @@ body{
 }
 
 /* =====================
-   Light Mode Overrides
+   Light Mode
 ===================== */
 @media (prefers-color-scheme: light){
 

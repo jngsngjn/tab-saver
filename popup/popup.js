@@ -71,22 +71,24 @@ function renderSessionItem(session) {
         .join("");
 
     return `
-        <li class="sessionItem">
-            <div class="sessionHeader">
-                <div class="sessionName">
-                    <span>${name}</span>
-                    <span class="sessionMeta">(${urls.length})</span>
-                </div>
+<li class="sessionItem">
+    <div class="sessionHeader">
+        <div class="sessionName">
+            <span class="arrow">▶</span>
+            <span>${name}</span>
+            <span class="sessionMeta">(${urls.length})</span>
+        </div>
 
-                <div class="actions">
-                    <button class="openBtn" data-id="${session.id}">열기</button>
-                    <button class="deleteBtn" data-id="${session.id}">삭제</button>
-                </div>
-            </div>
+        <div class="actions">
+            <button class="openBtn" data-id="${session.id}">열기</button>
+            <button class="deleteBtn" data-id="${session.id}">삭제</button>
+        </div>
+    </div>
 
-            <ul class="domainList hidden">${domains}</ul>
-        </li>
-    `;
+    <ul class="domainList hidden">${domains}</ul>
+</li>
+`;
+
 }
 
 /* ===== Binding ===== */
@@ -107,7 +109,23 @@ function bindSessionEvents() {
 /* ===== Actions ===== */
 function onToggle(e) {
     if (e.target.closest("button")) return;
-    e.currentTarget.nextElementSibling.classList.toggle("hidden");
+
+    const currentItem = e.currentTarget.closest(".sessionItem");
+    const currentList = currentItem.querySelector(".domainList");
+
+    // 🔒 다른 열려있는 세션 전부 닫기
+    document.querySelectorAll(".sessionItem.open").forEach(item => {
+        if (item !== currentItem) {
+            item.classList.remove("open");
+            item.querySelector(".domainList")?.classList.add("hidden");
+        }
+    });
+
+    // 🔁 현재 세션 토글
+    const isOpen = currentItem.classList.contains("open");
+
+    currentItem.classList.toggle("open", !isOpen);
+    currentList.classList.toggle("hidden", isOpen);
 }
 
 function onOpen(e) {
