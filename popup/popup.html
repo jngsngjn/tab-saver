@@ -16,20 +16,22 @@
     </header>
 
     <section class="section">
-        <input
-                id="sessionNameInput"
-                class="input"
-                type="text"
-                placeholder="탭 꾸러미 이름 (선택)"
-        />
+        <div class="saveRow">
+            <input
+                    id="sessionNameInput"
+                    class="input"
+                    type="text"
+                    placeholder="탭 꾸러미 이름 (선택)"
+            />
 
-        <button id="saveBtn" class="btn primary">
-            현재 탭 저장
-        </button>
+            <button id="saveBtn" class="btn primary saveBtn">
+                저장
+            </button>
+        </div>
+
+        <div id="status" class="toast"></div>
     </section>
 </div>
-
-<div id="status" class="toast hidden"></div>
 
 <div class="card">
     <section class="section">

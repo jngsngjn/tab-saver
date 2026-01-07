@@ -168,7 +168,7 @@ body{
 
 /* Delete */
 .deleteBtn{
-    padding:6px 10px;
+    padding:6px 12px;
     border-radius:10px;
     border:1px solid rgba(239,68,68,.45);
     background:rgba(239,68,68,.18);
@@ -206,20 +206,47 @@ body{
 
 /* Toast */
 .toast{
-    position:fixed;
-    left:12px;
-    right:12px;
-    bottom:12px;
+    margin-top:8px;
     padding:10px 12px;
+    min-height:38px;
+    box-sizing:border-box;
+
     border-radius:12px;
     background:rgba(17,24,39,.92);
-    color:var(--accent2);
-    font-weight:800;
+    font-weight:700;
+    font-size:12px;
     text-align:center;
-    box-shadow:var(--shadow);
+
+    opacity:0;
+    transform:translateY(-4px);
+    pointer-events:none;
+
+    transition:
+            opacity .2s ease,
+            transform .2s ease;
 }
+
+.toast.show{
+    opacity:1;
+    transform:translateY(0);
+}
+
+.toast.error{
+    color:var(--danger);
+    background:rgba(239,68,68,.12);
+}
+
+.toast.success{
+    color:var(--accent2);
+}
+
 @media (prefers-color-scheme: light){
-    .toast{ background:rgba(255,255,255,.92); }
+    .toast{
+        background:rgba(255,255,255,.92);
+    }
+    .toast.error{
+        background:#fee2e2;
+    }
 }
 
 /* Hint */
@@ -253,4 +280,23 @@ body{
     .deleteBtn:hover{
         background: #fecaca;
     }
+}
+
+.saveRow{
+    display:flex;
+    gap:8px;
+    align-items:center;
+}
+
+/* 인풋은 최대한 넓게 */
+.saveRow .input{
+    flex:1;
+    margin-bottom:0; /* 기존 세로 여백 제거 */
+}
+
+/* 저장 버튼은 컴팩트하게 */
+.saveBtn{
+    width:auto;
+    padding:10px 14px;
+    white-space:nowrap;
 }

@@ -22,8 +22,14 @@ document.getElementById("saveBtn").addEventListener("click", () => {
 
     chrome.runtime.sendMessage(
         { type: "SAVE_SESSION", name },
-        () => {
+        (res) => {
+            if (!res || res.success === false) {
+                showToast("저장할 수 있는 탭이 없어요", true);
+                return;
+            }
+
             sessionNameInput.value = "";
+            showToast(`탭 ${res.count}개 저장됨`);
             renderSessionList();
         }
     );
@@ -168,4 +174,18 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+const status = document.getElementById("status");
+
+function showToast(message, type = "success") {
+    status.textContent = message;
+
+    status.classList.remove("success", "error");
+    status.classList.add(type, "show");
+
+    clearTimeout(status._timer);
+    status._timer = setTimeout(() => {
+        status.classList.remove("show");
+    }, 1500);
 }

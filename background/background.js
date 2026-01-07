@@ -40,7 +40,19 @@ function saveSession(sendResponse, nameFromPopup) {
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
         const urls = tabs
             .map(tab => tab.url)
-            .filter(url => url.startsWith("http://") || url.startsWith("https://"));
+            .filter(
+                url =>
+                    url &&
+                    (url.startsWith("http://") || url.startsWith("https://"))
+            );
+
+        if (!urls.length) {
+            sendResponse({
+                success: false,
+                reason: "NO_VALID_TABS"
+            });
+            return;
+        }
 
         chrome.storage.local.get("sessions", (data) => {
             const sessions = Array.isArray(data.sessions) ? data.sessions : [];
@@ -56,7 +68,10 @@ function saveSession(sendResponse, nameFromPopup) {
             sessions.unshift(session);
 
             chrome.storage.local.set({ sessions }, () => {
-                sendResponse({ count: urls.length });
+                sendResponse({
+                    success: true,
+                    count: urls.length
+                });
             });
         });
     });
@@ -173,4 +188,15 @@ function renameSession(sessionId, newName, sendResponse) {
             sendResponse({ success: true });
         });
     });
+}
+
+function isSavableUrl(url) {
+    if (!url) return false;
+
+    return !(
+        url.startsWith("chrome://") ||
+        url.startsWith("about:") ||
+        url.startsWith("edge://") ||
+        url.startsWith("brave://")
+    );
 }
