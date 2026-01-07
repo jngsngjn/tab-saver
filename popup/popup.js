@@ -77,7 +77,7 @@ function renderSessionList() {
               </div>
 
               <div class="actions">
-                <button class="openBtn">열기</button>
+                <button class="openBtn" data-id="${s.id}">열기</button>
                 <button class="iconBtn editBtn" data-id="${s.id}">✏️</button>
                 <button class="iconBtn deleteBtn"
                         data-id="${s.id}"
@@ -128,7 +128,6 @@ function onToggle(e) {
 }
 
 /* 열기 */
-열기 안 됨
 function onOpen(e) {
     e.stopPropagation();
     const sessionId = e.currentTarget.dataset.id;
