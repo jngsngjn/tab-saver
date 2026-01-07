@@ -114,4 +114,9 @@ button {
     font-size: 11px;
     opacity: 0.85;
     padding: 2px 0;
+    cursor: pointer;
+}
+
+.domainItem:hover {
+    text-decoration: underline;
 }

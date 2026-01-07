@@ -14,6 +14,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         restoreSession(message.sessionId, message.openInNewWindow);
     }
 
+    if (message.type === "RESTORE_DOMAIN") {
+        restoreDomain(
+            message.sessionId,
+            message.domain,
+            message.openInNewWindow
+        );
+    }
+
     if (message.type === "DELETE_SESSION") {
         deleteSession(message.sessionId, sendResponse);
         return true;
@@ -64,6 +72,35 @@ function restoreSession(sessionId, openInNewWindow) {
             restoreInNewWindow(session.urls);
         } else {
             restoreInCurrentWindow(session.urls);
+        }
+    });
+}
+
+/**
+ * 특정 세션에서 특정 도메인만 복원
+ */
+function restoreDomain(sessionId, domain, openInNewWindow) {
+    if (!sessionId || !domain) return;
+
+    chrome.storage.local.get("sessions", (data) => {
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+        const session = sessions.find(s => s.id === sessionId);
+        if (!session) return;
+
+        const urls = session.urls.filter((url) => {
+            try {
+                return new URL(url).hostname === domain;
+            } catch {
+                return false;
+            }
+        });
+
+        if (!urls.length) return;
+
+        if (openInNewWindow) {
+            restoreInNewWindow(urls);
+        } else {
+            restoreInCurrentWindow(urls);
         }
     });
 }

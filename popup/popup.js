@@ -57,10 +57,9 @@ function renderSessionList() {
                 const domainListHtml = Object.entries(domainMap)
                     .map(
                         ([domain, count]) =>
-                            `<li class="domainItem">${domain} (${count})</li>`
+                            `<li class="domainItem" data-session-id="${s.id}" data-domain="${domain}">${domain} (${count})</li>`
                     )
                     .join("");
-
                 return `
           <li class="sessionItem">
             <div class="sessionHeader" data-id="${s.id}">
@@ -99,6 +98,9 @@ function bindSessionEvents() {
 
     sessionList.querySelectorAll(".sessionHeader").forEach(header =>
         header.addEventListener("click", onToggle)
+    );
+    sessionList.querySelectorAll(".domainItem").forEach(item =>
+        item.addEventListener("click", onDomainClick)
     );
 }
 
@@ -161,4 +163,20 @@ function escapeHtml(value) {
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+}
+
+function onDomainClick(e) {
+    e.stopPropagation(); // 토글 방지
+
+    const sessionId = e.currentTarget.dataset.sessionId;
+    const domain = e.currentTarget.dataset.domain;
+
+    chrome.storage.local.get("openInNewWindow", (data) => {
+        chrome.runtime.sendMessage({
+            type: "RESTORE_DOMAIN",
+            sessionId,
+            domain,
+            openInNewWindow: Boolean(data.openInNewWindow)
+        });
+    });
 }
