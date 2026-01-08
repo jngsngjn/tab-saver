@@ -1,0 +1,20 @@
+{
+  "appName": {
+    "message": "Tab Saver"
+  },
+  "appDesc": {
+    "message": "Save your tabs and restore them easily"
+  },
+  "save": { "message": "Save" },
+  "savePlaceholder": { "message": "Tab name (optional)" },
+
+  "savedTabs": { "message": "Saved Tabs" },
+  "openInNewWindow": { "message": "Open in new window" },
+  "empty": { "message": "No saved tabs." },
+
+  "open": { "message": "Open" },
+  "delete": { "message": "Delete" },
+
+  "savedToast": { "message": "Saved $COUNT$ tabs" },
+  "noTabsToSave": { "message": "No tabs to save" }
+}

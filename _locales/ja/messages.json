@@ -1,0 +1,20 @@
+{
+  "appName": {
+    "message": "Tab Saver"
+  },
+  "appDesc": {
+    "message": "タブを保存して簡単に復元できます"
+  },
+  "save": { "message": "保存" },
+  "savePlaceholder": { "message": "タブ名（任意）" },
+
+  "savedTabs": { "message": "保存済みタブ" },
+  "openInNewWindow": { "message": "新しいウィンドウで開く" },
+  "empty": { "message": "保存されたタブはありません。" },
+
+  "open": { "message": "開く" },
+  "delete": { "message": "削除" },
+
+  "savedToast": { "message": "$COUNT$ 件のタブを保存しました" },
+  "noTabsToSave": { "message": "保存できるタブがありません" }
+}

@@ -1,7 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Tab Saver",
-  "description": "Save all open tabs and restore them later with one click.",
+
+  "name": "__MSG_appName__",
+  "description": "__MSG_appDesc__",
+  "default_locale": "ko",
+
   "version": "0.1.0",
 
   "permissions": ["tabs", "storage"],

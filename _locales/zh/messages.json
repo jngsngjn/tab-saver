@@ -1,0 +1,20 @@
+{
+  "appName": {
+    "message": "Tab Saver"
+  },
+  "appDesc": {
+    "message": "轻松保存并恢复标签页"
+  },
+  "save": { "message": "保存" },
+  "savePlaceholder": { "message": "标签名称（可选）" },
+
+  "savedTabs": { "message": "已保存的标签" },
+  "openInNewWindow": { "message": "在新窗口中打开" },
+  "empty": { "message": "没有已保存的标签。" },
+
+  "open": { "message": "打开" },
+  "delete": { "message": "删除" },
+
+  "savedToast": { "message": "已保存 $COUNT$ 个标签" },
+  "noTabsToSave": { "message": "没有可保存的标签" }
+}

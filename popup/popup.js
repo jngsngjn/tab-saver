@@ -7,11 +7,23 @@ const status = document.getElementById("status");
 
 let draggedItem = null;
 
+function applyI18n() {
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+        el.textContent = chrome.i18n.getMessage(el.dataset.i18n);
+    });
+
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+        el.placeholder = chrome.i18n.getMessage(
+            el.dataset.i18nPlaceholder
+        );
+    });
+}
+
 /* ===== Init ===== */
 chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
     checkbox.checked = Boolean(openInNewWindow);
 });
-
+applyI18n();
 renderSessionList();
 
 /* ===== Events ===== */
@@ -29,12 +41,18 @@ function onSave() {
         { type: "SAVE_SESSION", name },
         (res) => {
             if (!res || res.success === false) {
-                showToast("저장할 수 있는 탭이 없어요", "error");
+                showToast(
+                    chrome.i18n.getMessage("noTabsToSave"),
+                    "error"
+                );
                 return;
             }
 
             sessionNameInput.value = "";
-            showToast(`탭 ${res.count}개 저장됨`, "success");
+            showToast(
+                chrome.i18n.getMessage("savedToast", [res.count]),
+                "success"
+            );
             renderSessionList();
         }
     );
@@ -85,8 +103,8 @@ function renderSessionItem(session) {
         </div>
 
         <div class="actions">
-            <button class="openBtn" data-id="${session.id}">열기</button>
-            <button class="deleteBtn" data-id="${session.id}">삭제</button>
+            <button class="openBtn" data-id="${session.id}">${chrome.i18n.getMessage("open")}</button>
+            <button class="deleteBtn" data-id="${session.id}">${chrome.i18n.getMessage("delete")}</button>
         </div>
     </div>
 

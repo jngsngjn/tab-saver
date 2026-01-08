@@ -9,10 +9,8 @@
 
 <div class="card">
     <header class="header">
-        <div>
-            <div class="title">Tab Saver</div>
-            <div class="sub">현재 탭을 저장하고, 편리하게 복원하세요!</div>
-        </div>
+        <div class="title" data-i18n="appName"></div>
+        <div class="sub" data-i18n="appDesc"></div>
     </header>
 
     <section class="section">
@@ -21,9 +19,11 @@
                     id="sessionNameInput"
                     class="input"
                     type="text"
-                    placeholder="탭 이름 (선택)"
+                    data-i18n-placeholder="savePlaceholder"
             />
-            <button id="saveBtn" class="btn primary saveBtn">저장</button>
+            <button id="saveBtn"
+                    class="btn primary saveBtn"
+                    data-i18n="save"></button>
         </div>
 
         <div id="status" class="toast"></div>
@@ -33,16 +33,18 @@
 <div class="card">
     <section class="section">
         <div class="sectionHeader">
-            <div class="sectionTitle">저장된 탭</div>
+            <div class="sectionTitle" data-i18n="savedTabs"></div>
 
             <label class="toggle inline">
                 <input type="checkbox" id="newWindowCheckbox" />
-                <span>새 창에서 복원</span>
+                <span data-i18n="openInNewWindow"></span>
             </label>
         </div>
 
         <ul id="sessionList" class="list"></ul>
-        <p id="emptyHint" class="hint hidden">저장된 탭이 없어요.</p>
+        <p id="emptyHint"
+           class="hint hidden"
+           data-i18n="empty"></p>
     </section>
 </div>
 

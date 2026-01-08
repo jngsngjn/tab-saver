@@ -1,0 +1,20 @@
+{
+  "appName": {
+    "message": "Tab Saver"
+  },
+  "appDesc": {
+    "message": "탭을 저장하고 편리하게 복원하세요"
+  },
+  "save": { "message": "저장" },
+  "savePlaceholder": { "message": "탭 이름 (선택)" },
+
+  "savedTabs": { "message": "저장된 탭" },
+  "openInNewWindow": { "message": "새 창에서 복원" },
+  "empty": { "message": "저장된 탭이 없어요." },
+
+  "open": { "message": "열기" },
+  "delete": { "message": "삭제" },
+
+  "savedToast": { "message": "탭 $COUNT$개 저장됨" },
+  "noTabsToSave": { "message": "저장할 수 있는 탭이 없어요" }
+}
