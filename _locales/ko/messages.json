@@ -19,5 +19,6 @@
     }
   },
 
-  "noTabsToSave": { "message": "저장할 수 있는 탭이 없어요" }
+  "noTabsToSave": { "message": "저장할 수 있는 탭이 없어요" },
+  "nameTooLong": { "message": "이름은 20자 이내로 입력해주세요" }
 }

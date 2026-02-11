@@ -19,5 +19,6 @@
     }
   },
 
-  "noTabsToSave": { "message": "保存できるタブがありません" }
+  "noTabsToSave": { "message": "保存できるタブがありません" },
+  "nameTooLong": { "message": "名前は20文字以内で入力してください" }
 }

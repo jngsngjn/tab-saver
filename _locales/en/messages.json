@@ -19,5 +19,6 @@
     }
   },
 
-  "noTabsToSave": { "message": "No tabs to save" }
+  "noTabsToSave": { "message": "No tabs to save" },
+  "nameTooLong": { "message": "Name must be 20 characters or less" }
 }

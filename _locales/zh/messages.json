@@ -19,5 +19,6 @@
     }
   },
 
-  "noTabsToSave": { "message": "没有可保存的标签" }
+  "noTabsToSave": { "message": "没有可保存的标签" },
+  "nameTooLong": { "message": "名称不能超过 20 个字符" }
 }

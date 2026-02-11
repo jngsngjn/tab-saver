@@ -37,6 +37,14 @@ document.getElementById("saveBtn").addEventListener("click", onSave);
 function onSave() {
     const name = sessionNameInput.value.trim();
 
+    if (name.length > 20) {
+        showToast(
+            chrome.i18n.getMessage("nameTooLong"),
+            "error"
+        );
+        return;
+    }
+
     chrome.runtime.sendMessage(
         { type: "SAVE_SESSION", name },
         (res) => {
