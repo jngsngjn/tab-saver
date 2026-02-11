@@ -40,11 +40,7 @@ function saveSession(sendResponse, nameFromPopup) {
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
         const urls = tabs
             .map(tab => tab.url)
-            .filter(
-                url =>
-                    url &&
-                    (url.startsWith("http://") || url.startsWith("https://"))
-            );
+            .filter(isSavableUrl);
 
         // ✅ 1차 방어
         if (urls.length === 0) {
@@ -119,6 +115,9 @@ function restoreDomain(sessionId, domain, openInNewWindow) {
 
         const urls = session.urls.filter((url) => {
             try {
+                if (url.startsWith("file://")) {
+                    return domain === "Local Files";
+                }
                 return new URL(url).hostname === domain;
             } catch {
                 return false;
@@ -203,10 +202,20 @@ function renameSession(sessionId, newName, sendResponse) {
 function isSavableUrl(url) {
     if (!url) return false;
 
-    return !(
+    // chrome://, about:, edge://, brave:// 등 브라우저 내부 페이지 제외
+    if (
         url.startsWith("chrome://") ||
         url.startsWith("about:") ||
         url.startsWith("edge://") ||
         url.startsWith("brave://")
+    ) {
+        return false;
+    }
+
+    // http, https, file 프로토콜 허용
+    return (
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("file://")
     );
 }

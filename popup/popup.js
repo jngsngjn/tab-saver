@@ -206,7 +206,12 @@ function restoreDomain(sessionId, domain) {
 function countDomains(urls) {
     return urls.reduce((map, url) => {
         try {
-            const domain = new URL(url).hostname;
+            let domain;
+            if (url.startsWith("file://")) {
+                domain = "Local Files";
+            } else {
+                domain = new URL(url).hostname;
+            }
             map[domain] = (map[domain] || 0) + 1;
         } catch {}
         return map;
