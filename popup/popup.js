@@ -33,6 +33,12 @@ checkbox.addEventListener("change", () => {
 
 document.getElementById("saveBtn").addEventListener("click", onSave);
 
+sessionNameInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        onSave();
+    }
+});
+
 /* ===== Handlers ===== */
 function onSave() {
     const name = sessionNameInput.value.trim();
