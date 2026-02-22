@@ -92,16 +92,18 @@ function renderSessionList() {
 function renderSessionItem(session) {
     const name = escapeHtml(session.name || "Untitled");
     const urls = Array.isArray(session.urls) ? session.urls : [];
-    const domainMap = countDomains(urls);
 
-    const domains = Object.entries(domainMap)
-        .map(([domain, count]) => `
-            <li class="domainItem"
+    const urlItems = urls
+        .map(url => {
+            const favicon = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
+            return `
+            <li class="urlItem"
                 data-session-id="${session.id}"
-                data-domain="${domain}">
-                ${domain} (${count})
+                data-url="${url}">
+                <img src="${favicon}" class="urlFavicon" alt="" />
+                ${url}
             </li>
-        `)
+        `;})
         .join("");
 
     return `
@@ -122,7 +124,7 @@ function renderSessionItem(session) {
         </div>
     </div>
 
-    <ul class="domainList hidden">${domains}</ul>
+    <ul class="urlList hidden">${urlItems}</ul>
 </li>
 `;
 }
@@ -138,8 +140,8 @@ function bindSessionEvents() {
     sessionList.querySelectorAll(".sessionHeader")
         .forEach(el => el.addEventListener("click", onToggle));
 
-    sessionList.querySelectorAll(".domainItem")
-        .forEach(el => el.addEventListener("click", onDomainClick));
+    sessionList.querySelectorAll(".urlItem")
+        .forEach(el => el.addEventListener("click", onUrlClick));
 
     // ✅ Drag & Drop
     sessionList.querySelectorAll(".sessionItem")
@@ -156,13 +158,13 @@ function onToggle(e) {
     if (e.target.closest("button")) return;
 
     const currentItem = e.currentTarget.closest(".sessionItem");
-    const currentList = currentItem.querySelector(".domainList");
+    const currentList = currentItem.querySelector(".urlList");
 
     // 🔒 다른 열려있는 세션 전부 닫기
     document.querySelectorAll(".sessionItem.open").forEach(item => {
         if (item !== currentItem) {
             item.classList.remove("open");
-            item.querySelector(".domainList")?.classList.add("hidden");
+            item.querySelector(".urlList")?.classList.add("hidden");
         }
     });
 
@@ -186,11 +188,10 @@ function onDelete(e) {
     );
 }
 
-function onDomainClick(e) {
+function onUrlClick(e) {
     e.stopPropagation();
-    restoreDomain(
-        e.currentTarget.dataset.sessionId,
-        e.currentTarget.dataset.domain
+    restoreUrl(
+        e.currentTarget.dataset.url
     );
 }
 
@@ -205,33 +206,14 @@ function restoreSession(sessionId) {
     });
 }
 
-function restoreDomain(sessionId, domain) {
-    chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
-        chrome.runtime.sendMessage({
-            type: "RESTORE_DOMAIN",
-            sessionId,
-            domain,
-            openInNewWindow: Boolean(openInNewWindow)
-        });
+function restoreUrl(url) {
+    chrome.runtime.sendMessage({
+        type: "RESTORE_URL",
+        url
     });
 }
 
 /* ===== Utils ===== */
-function countDomains(urls) {
-    return urls.reduce((map, url) => {
-        try {
-            let domain;
-            if (url.startsWith("file://")) {
-                domain = "Local Files";
-            } else {
-                domain = new URL(url).hostname;
-            }
-            map[domain] = (map[domain] || 0) + 1;
-        } catch {}
-        return map;
-    }, {});
-}
-
 function escapeHtml(value) {
     return String(value)
         .replaceAll("&", "&amp;")
@@ -256,7 +238,7 @@ function onDragStart(e) {
 
     // 아코디언 열려 있으면 닫기
     draggedItem.classList.remove("open");
-    draggedItem.querySelector(".domainList")?.classList.add("hidden");
+    draggedItem.querySelector(".urlList")?.classList.add("hidden");
 
     e.dataTransfer.effectAllowed = "move";
 }

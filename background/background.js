@@ -22,6 +22,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         );
     }
 
+    if (message.type === "RESTORE_URL") {
+        chrome.tabs.create({ url: message.url });
+    }
+
     if (message.type === "DELETE_SESSION") {
         deleteSession(message.sessionId, sendResponse);
         return true;
