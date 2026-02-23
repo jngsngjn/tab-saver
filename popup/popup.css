@@ -209,6 +209,15 @@ body{
     transform:rotate(90deg);
 }
 
+.sessionItem.deleteLocked{
+    background:rgba(148,163,184,.18);
+    border-color:rgba(148,163,184,.4);
+}
+
+.sessionItem.deleteLocked .sessionName{
+    opacity:.7;
+}
+
 /* Actions */
 .actions{
     display:flex;
@@ -225,6 +234,10 @@ body{
     font-size:11px;
     font-weight:700;
     cursor:pointer;
+    min-width:48px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
 }
 
 /* Open */
@@ -243,10 +256,35 @@ body{
     border:1px solid rgba(239,68,68,.45);
     background:rgba(239,68,68,.18);
     color:#fecaca;
+    gap:4px;
 }
 
 .deleteBtn:hover{
     background:rgba(239,68,68,.3);
+}
+
+.deleteBtn.deleting{
+    border-color:rgba(239,68,68,.5);
+    background:rgba(239,68,68,.22);
+    color:#fee2e2;
+}
+
+.deleteBtn.deleting.deletingStep3{
+    background:rgba(239,68,68,.22);
+    border-color:rgba(239,68,68,.5);
+    color:#fee2e2;
+}
+
+.deleteBtn.deleting.deletingStep2{
+    background:rgba(239,68,68,.32);
+    border-color:rgba(239,68,68,.65);
+    color:#fecaca;
+}
+
+.deleteBtn.deleting.deletingStep1{
+    background:rgba(239,68,68,.48);
+    border-color:rgba(239,68,68,.8);
+    color:#fecaca;
 }
 
 /* =====================
@@ -286,6 +324,20 @@ body{
     overflow-y: auto;
 }
 
+.sessionItem.deleteLocked .urlList{
+    pointer-events:none;
+}
+
+.sessionItem.deleteLocked .openBtn{
+    background:rgba(148,163,184,.35);
+    border-color:rgba(148,163,184,.55);
+    color:#e2e8f0;
+}
+
+.sessionItem.deleteLocked .openBtn:hover{
+    background:rgba(148,163,184,.35);
+}
+
 .urlItem{
     font-size:11px;
     color:var(--muted);
@@ -321,13 +373,52 @@ body{
     opacity:0; /* Hover시에만 노출 */
 }
 
+.urlDeleteBtn.disabled{
+    pointer-events:none;
+    opacity:0 !important;
+}
+
+.sessionItem.deleteLocked .urlDeleteBtn{
+    pointer-events:none;
+    opacity:0;
+}
+
+.urlDeleteBtn.deleting{
+    width:auto;
+    padding:0 4px;
+    opacity:1;
+    background:rgba(96,165,250,.12);
+    color:var(--accent);
+}
+
 .urlItem:hover .urlDeleteBtn{
     opacity:1;
+}
+
+.urlItem:hover .urlDeleteBtn.disabled{
+    opacity:0;
 }
 
 .urlDeleteBtn:hover{
     background:rgba(239,68,68,.15);
     color:var(--danger);
+}
+
+.deleteCountdownIcon{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    margin-right:4px;
+    animation:deleteCountdownSpin 1s linear infinite;
+}
+
+.deleteCountdownText{
+    font-variant-numeric:tabular-nums;
+}
+
+@keyframes deleteCountdownSpin{
+    from{ transform:rotate(0deg); }
+    to{ transform:rotate(-360deg); }
 }
 
 .urlFavicon{
@@ -365,6 +456,7 @@ body{
 .toast.show{
     opacity:1;
     transform:translateY(0);
+    pointer-events:auto;
 }
 
 .toast.success{ color:var(--accent2); }
@@ -372,6 +464,37 @@ body{
 .toast.error{
     color:var(--danger);
     background:rgba(239,68,68,.12);
+}
+
+.toast.pending{
+    color:var(--accent);
+    text-align:left;
+}
+
+.toastContent{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
+
+.toastText{
+    flex:1;
+}
+
+.toastUndoBtn{
+    padding:4px 8px;
+    border-radius:999px;
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--accent);
+    font-weight:700;
+    font-size:11px;
+    cursor:pointer;
+}
+
+.toastUndoBtn:hover{
+    background:rgba(96,165,250,.12);
 }
 
 /* =====================
@@ -416,6 +539,31 @@ body{
     .deleteBtn:hover{
         background:#fecaca;
     }
+
+    .deleteBtn.deleting{
+        background:#fecaca;
+        border-color:#f87171;
+        color:#991b1b;
+    }
+
+    .deleteBtn.deleting.deletingStep3{
+        background:#fecaca;
+        border-color:#f87171;
+        color:#991b1b;
+    }
+
+    .deleteBtn.deleting.deletingStep2{
+        background:#fca5a5;
+        border-color:#ef4444;
+        color:#991b1b;
+    }
+
+    .deleteBtn.deleting.deletingStep1{
+        background:#f87171;
+        border-color:#dc2626;
+        color:#7f1d1d;
+    }
+
 }
 /* =====================
    Drag & Drop

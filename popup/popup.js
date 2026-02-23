@@ -6,6 +6,9 @@ const emptyHint = document.getElementById("emptyHint");
 const status = document.getElementById("status");
 
 let draggedItem = null;
+const DELETE_UNDO_MS = 3000;
+const DELETE_COUNTDOWN_START = 3;
+const pendingDeletes = new Map();
 
 function applyI18n() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -86,6 +89,7 @@ function renderSessionList(openId = null) {
         emptyHint.classList.add("hidden");
         sessionList.innerHTML = list.map(s => renderSessionItem(s, s.id === openId)).join("");
         bindSessionEvents();
+        syncPendingDeleteUI();
     });
 }
 
@@ -99,6 +103,7 @@ function renderSessionItem(session, isOpen = false) {
 
             const displayUrl = escapeHtml(url);              // 화면 표시용
             const dataUrl = encodeURIComponent(url);         // data attribute 용(안전)
+            const isLastUrl = urls.length === 1;
 
             return `
             <li class="urlItem"
@@ -107,10 +112,12 @@ function renderSessionItem(session, isOpen = false) {
                 data-index="${index}">
                 <img src="${favicon}" class="urlFavicon" alt="" />
                 <span class="urlText">${displayUrl}</span>
-                <button class="urlDeleteBtn" 
+                <button class="urlDeleteBtn${isLastUrl ? " disabled" : ""}"
+                        ${isLastUrl ? "disabled" : ""}
                         data-session-id="${session.id}" 
                         data-url="${dataUrl}"
                         data-index="${index}"
+                        data-url-count="${urls.length}"
                         title="${chrome.i18n.getMessage("delete")}">×</button>
             </li>
         `;
@@ -172,6 +179,7 @@ function onToggle(e) {
     if (e.target.closest("button")) return;
 
     const currentItem = e.currentTarget.closest(".sessionItem");
+    if (currentItem.classList.contains("deleteLocked")) return;
     const currentList = currentItem.querySelector(".urlList");
 
     // 🔒 다른 열려있는 세션 전부 닫기
@@ -191,15 +199,23 @@ function onToggle(e) {
 
 function onOpen(e) {
     e.stopPropagation();
-    restoreSession(e.currentTarget.dataset.id);
+    const sessionId = e.currentTarget.dataset.id;
+    const item = e.currentTarget.closest(".sessionItem");
+    if (item?.classList.contains("deleteLocked")) return;
+    restoreSession(sessionId);
 }
 
 function onDelete(e) {
     e.stopPropagation();
-    chrome.runtime.sendMessage(
-        { type: "DELETE_SESSION", sessionId: e.currentTarget.dataset.id },
-        () => renderSessionList()
-    );
+    const sessionId = e.currentTarget.dataset.id;
+    const button = e.currentTarget;
+
+    handleDeleteClick(button, () => {
+        chrome.runtime.sendMessage(
+            { type: "DELETE_SESSION", sessionId },
+            () => renderSessionList()
+        );
+    }, sessionId);
 }
 
 function onUrlClick(e) {
@@ -213,8 +229,12 @@ function onUrlDelete(e) {
     e.preventDefault();
     e.stopImmediatePropagation();
     const sessionId = e.currentTarget.dataset.sessionId;
+    const urlCount = Number(e.currentTarget.dataset.urlCount);
+    if (Number.isFinite(urlCount) && urlCount <= 1) return;
+    if (pendingDeletes.has(sessionId)) return;
     const index = Number(e.currentTarget.dataset.index);
     const url = decodeURIComponent(e.currentTarget.dataset.url);
+    const button = e.currentTarget;
 
     chrome.runtime.sendMessage(
         { type: "DELETE_URL", sessionId, url, index },
@@ -293,6 +313,159 @@ function showToast(message, type = "success") {
     status._timer = setTimeout(() => {
         status.classList.remove("show");
     }, 1500);
+}
+
+function handleDeleteClick(button, execute, sessionId) {
+    if (pendingDeletes.has(sessionId)) {
+        cancelPendingDelete(sessionId);
+        return;
+    }
+
+    startDeleteCountdown(button, execute, sessionId);
+}
+
+function startDeleteCountdown(button, execute, sessionId) {
+    const defaultContent = button.dataset.defaultContent ?? button.innerHTML;
+    button.dataset.defaultContent = defaultContent;
+    lockDeleteButtonWidth(button);
+    button.classList.add("deleting");
+    applyDeleteCountdownTone(button, DELETE_COUNTDOWN_START);
+    button.innerHTML = renderDeleteCountdownContent(DELETE_COUNTDOWN_START);
+
+    let remaining = DELETE_COUNTDOWN_START;
+
+    if (sessionId) {
+        lockSessionForDelete(sessionId);
+    }
+
+    const state = {
+        sessionId,
+        execute,
+        remaining,
+        timer: null,
+        interval: null
+    };
+    pendingDeletes.set(sessionId, state);
+
+    state.interval = setInterval(() => {
+        state.remaining -= 1;
+        if (state.remaining <= 0) {
+            clearInterval(state.interval);
+            return;
+        }
+        updateDeleteCountdown(sessionId, state.remaining);
+    }, 1000);
+
+    state.timer = setTimeout(() => {
+        clearInterval(state.interval);
+        pendingDeletes.delete(sessionId);
+        state.execute?.();
+    }, DELETE_UNDO_MS);
+}
+
+function cancelPendingDelete(sessionId) {
+    const state = pendingDeletes.get(sessionId);
+    if (!state) return;
+    clearTimeout(state.timer);
+    clearInterval(state.interval);
+    pendingDeletes.delete(sessionId);
+    restoreDeleteButton(sessionId);
+    unlockSessionForDelete(sessionId);
+}
+
+function renderDeleteCountdownContent(remaining) {
+    return `
+        <span class="deleteCountdownIcon">↺</span>
+        <span class="deleteCountdownText">${remaining}</span>
+    `;
+}
+
+function updateDeleteCountdown(sessionId, remaining) {
+    const button = sessionList.querySelector(`.deleteBtn[data-id="${sessionId}"]`);
+    if (!button) return;
+    button.classList.add("deleting");
+    if (!button.dataset.defaultContent) {
+        button.dataset.defaultContent = button.innerHTML;
+    }
+    applyDeleteCountdownTone(button, remaining);
+    button.innerHTML = renderDeleteCountdownContent(remaining);
+}
+
+function restoreDeleteButton(sessionId) {
+    const button = sessionList.querySelector(`.deleteBtn[data-id="${sessionId}"]`);
+    if (!button) return;
+    const defaultContent = button.dataset.defaultContent ?? chrome.i18n.getMessage("delete");
+    button.dataset.defaultContent = defaultContent;
+    button.classList.remove("deleting");
+    clearDeleteCountdownTone(button);
+    button.innerHTML = defaultContent;
+    unlockDeleteButtonWidth(button);
+}
+
+function syncPendingDeleteUI() {
+    pendingDeletes.forEach((state, sessionId) => {
+        const button = sessionList.querySelector(`.deleteBtn[data-id="${sessionId}"]`);
+        if (!button) return;
+        if (!button.dataset.defaultContent) {
+            button.dataset.defaultContent = button.innerHTML;
+        }
+        lockDeleteButtonWidth(button);
+        button.classList.add("deleting");
+        applyDeleteCountdownTone(button, state.remaining);
+        button.innerHTML = renderDeleteCountdownContent(state.remaining);
+        lockSessionForDelete(sessionId);
+    });
+}
+
+function applyDeleteCountdownTone(button, remaining) {
+    if (!button) return;
+    const step = Math.max(1, Math.min(DELETE_COUNTDOWN_START, remaining));
+    button.classList.remove(
+        "deletingStep1",
+        "deletingStep2",
+        "deletingStep3"
+    );
+    button.classList.add(`deletingStep${step}`);
+}
+
+function clearDeleteCountdownTone(button) {
+    if (!button) return;
+    button.classList.remove("deletingStep1", "deletingStep2", "deletingStep3");
+}
+
+function lockDeleteButtonWidth(button) {
+    if (!button) return;
+    if (!button.dataset.defaultWidth) {
+        const width = button.getBoundingClientRect().width;
+        if (width) {
+            button.dataset.defaultWidth = String(Math.ceil(width));
+        }
+    }
+    if (button.dataset.defaultWidth) {
+        button.style.width = `${button.dataset.defaultWidth}px`;
+    }
+}
+
+function unlockDeleteButtonWidth(button) {
+    if (!button) return;
+    button.style.removeProperty("width");
+    if (button.dataset.defaultWidth) {
+        delete button.dataset.defaultWidth;
+    }
+}
+
+function lockSessionForDelete(sessionId) {
+    const item = sessionList.querySelector(`.sessionItem[data-id="${sessionId}"]`);
+    if (!item) return;
+    item.classList.add("deleteLocked");
+    item.classList.remove("open");
+    item.querySelector(".urlList")?.classList.add("hidden");
+}
+
+function unlockSessionForDelete(sessionId) {
+    const item = sessionList.querySelector(`.sessionItem[data-id="${sessionId}"]`);
+    if (!item) return;
+    item.classList.remove("deleteLocked");
 }
 function onDragStart(e) {
     draggedItem = e.currentTarget;
