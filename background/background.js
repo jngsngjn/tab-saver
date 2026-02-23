@@ -1,4 +1,22 @@
 /**
+ * 앱 설치/업데이트 시 로컬 데이터를 동기화 저장소로 마이그레이션
+ */
+chrome.runtime.onInstalled.addListener(() => {
+    chrome.storage.local.get(null, (localData) => {
+        if (localData && Object.keys(localData).length > 0) {
+            chrome.storage.sync.get(null, (syncData) => {
+                // 동기화 저장소가 비어있는 경우에만 마이그레이션 진행
+                if (!syncData || Object.keys(syncData).length === 0) {
+                    chrome.storage.sync.set(localData, () => {
+                        console.log("Data migrated from local to sync storage.");
+                    });
+                }
+            });
+        }
+    });
+});
+
+/**
  * Popup에서 전달되는 메시지를 처리
  * - SAVE_SESSION
  * - RESTORE_SESSION
@@ -55,7 +73,7 @@ function saveSession(sendResponse, nameFromPopup) {
             return;
         }
 
-        chrome.storage.local.get("sessions", (data) => {
+        chrome.storage.sync.get("sessions", (data) => {
             // ✅ 2차 방어 (안전장치)
             if (urls.length === 0) {
                 sendResponse({
@@ -77,7 +95,7 @@ function saveSession(sendResponse, nameFromPopup) {
 
             sessions.unshift(session);
 
-            chrome.storage.local.set({ sessions }, () => {
+            chrome.storage.sync.set({ sessions }, () => {
                 sendResponse({
                     success: true,
                     count: urls.length
@@ -93,7 +111,7 @@ function saveSession(sendResponse, nameFromPopup) {
 function restoreSession(sessionId, openInNewWindow) {
     if (!sessionId) return;
 
-    chrome.storage.local.get("sessions", (data) => {
+    chrome.storage.sync.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const session = sessions.find(s => s.id === sessionId);
         if (!session || !session.urls.length) return;
@@ -112,7 +130,7 @@ function restoreSession(sessionId, openInNewWindow) {
 function restoreDomain(sessionId, domain, openInNewWindow) {
     if (!sessionId || !domain) return;
 
-    chrome.storage.local.get("sessions", (data) => {
+    chrome.storage.sync.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const session = sessions.find(s => s.id === sessionId);
         if (!session) return;
@@ -142,11 +160,11 @@ function restoreDomain(sessionId, domain, openInNewWindow) {
  * 세션 삭제
  */
 function deleteSession(sessionId, sendResponse) {
-    chrome.storage.local.get("sessions", (data) => {
+    chrome.storage.sync.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const nextSessions = sessions.filter(s => s.id !== sessionId);
 
-        chrome.storage.local.set({ sessions: nextSessions }, () => {
+        chrome.storage.sync.set({ sessions: nextSessions }, () => {
             sendResponse({ success: true });
         });
     });
@@ -189,7 +207,7 @@ function formatSessionName(timestamp) {
 function renameSession(sessionId, newName, sendResponse) {
     if (!sessionId || !newName) return;
 
-    chrome.storage.local.get("sessions", (data) => {
+    chrome.storage.sync.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
 
         const target = sessions.find(s => s.id === sessionId);
@@ -197,7 +215,7 @@ function renameSession(sessionId, newName, sendResponse) {
 
         target.name = newName;
 
-        chrome.storage.local.set({ sessions }, () => {
+        chrome.storage.sync.set({ sessions }, () => {
             sendResponse({ success: true });
         });
     });

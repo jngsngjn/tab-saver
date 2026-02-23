@@ -20,7 +20,7 @@ function applyI18n() {
 }
 
 /* ===== Init ===== */
-chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
+chrome.storage.sync.get("openInNewWindow", ({ openInNewWindow }) => {
     checkbox.checked = Boolean(openInNewWindow);
 });
 applyI18n();
@@ -28,7 +28,7 @@ renderSessionList();
 
 /* ===== Events ===== */
 checkbox.addEventListener("change", () => {
-    chrome.storage.local.set({ openInNewWindow: checkbox.checked });
+    chrome.storage.sync.set({ openInNewWindow: checkbox.checked });
 });
 
 document.getElementById("saveBtn").addEventListener("click", onSave);
@@ -74,7 +74,7 @@ function onSave() {
 
 /* ===== Render ===== */
 function renderSessionList() {
-    chrome.storage.local.get("sessions", ({ sessions }) => {
+    chrome.storage.sync.get("sessions", ({ sessions }) => {
         const list = Array.isArray(sessions) ? sessions : [];
 
         if (!list.length) {
@@ -197,7 +197,7 @@ function onUrlClick(e) {
 
 /* ===== Restore ===== */
 function restoreSession(sessionId) {
-    chrome.storage.local.get("openInNewWindow", ({ openInNewWindow }) => {
+    chrome.storage.sync.get("openInNewWindow", ({ openInNewWindow }) => {
         chrome.runtime.sendMessage({
             type: "RESTORE_SESSION",
             sessionId,
@@ -279,7 +279,7 @@ function saveNewOrder() {
     const orderedIds = [...sessionList.querySelectorAll(".sessionItem")]
         .map(el => el.dataset.id);
 
-    chrome.storage.local.get("sessions", ({ sessions }) => {
+    chrome.storage.sync.get("sessions", ({ sessions }) => {
         if (!Array.isArray(sessions)) return;
 
         const map = Object.fromEntries(
@@ -290,6 +290,6 @@ function saveNewOrder() {
             .map(id => map[id])
             .filter(Boolean);
 
-        chrome.storage.local.set({ sessions: reordered });
+        chrome.storage.sync.set({ sessions: reordered });
     });
 }
