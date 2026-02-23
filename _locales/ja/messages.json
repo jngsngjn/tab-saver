@@ -12,6 +12,10 @@
   "open": { "message": "開く" },
   "delete": { "message": "削除" },
 
+  "themeSystem": { "message": "テーマ: システム" },
+  "themeLight": { "message": "テーマ: ライト" },
+  "themeDark": { "message": "テーマ: ダーク" },
+
   "savedToast": {
     "message": "$COUNT$ 件のタブを保存しました",
     "placeholders": {

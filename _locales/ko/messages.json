@@ -12,6 +12,10 @@
   "open": { "message": "열기" },
   "delete": { "message": "삭제" },
 
+  "themeSystem": { "message": "테마: 시스템" },
+  "themeLight": { "message": "테마: 라이트" },
+  "themeDark": { "message": "테마: 다크" },
+
   "savedToast": {
     "message": "탭 $COUNT$개 저장됨",
     "placeholders": {

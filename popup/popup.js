@@ -4,11 +4,20 @@ const checkbox = document.getElementById("newWindowCheckbox");
 const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
 const status = document.getElementById("status");
+const themeToggle = document.getElementById("themeToggle");
 
 let draggedItem = null;
 const DELETE_UNDO_MS = 3000;
 const DELETE_COUNTDOWN_START = 3;
 const pendingDeletes = new Map();
+const THEME_PREFERENCE_KEY = "themePreference";
+const THEME_MODES = ["system", "light", "dark"];
+const THEME_ICONS = {
+    system: "⚙️",
+    light: "☀️",
+    dark: "🌙"
+};
+let currentThemePreference = "system";
 
 function applyI18n() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -23,8 +32,12 @@ function applyI18n() {
 }
 
 /* ===== Init ===== */
-chrome.storage.sync.get("openInNewWindow", ({ openInNewWindow }) => {
+chrome.storage.sync.get([
+    "openInNewWindow",
+    THEME_PREFERENCE_KEY
+], ({ openInNewWindow, themePreference }) => {
     checkbox.checked = Boolean(openInNewWindow);
+    applyThemePreference(themePreference);
 });
 applyI18n();
 renderSessionList();
@@ -32,6 +45,14 @@ renderSessionList();
 /* ===== Events ===== */
 checkbox.addEventListener("change", () => {
     chrome.storage.sync.set({ openInNewWindow: checkbox.checked });
+});
+
+themeToggle.addEventListener("click", () => {
+    const currentIndex = THEME_MODES.indexOf(currentThemePreference);
+    const nextPreference = THEME_MODES[(currentIndex + 1) % THEME_MODES.length];
+    chrome.storage.sync.set({ [THEME_PREFERENCE_KEY]: nextPreference }, () => {
+        applyThemePreference(nextPreference);
+    });
 });
 
 document.getElementById("saveBtn").addEventListener("click", onSave);
@@ -73,6 +94,33 @@ function onSave() {
             renderSessionList();
         }
     );
+}
+
+function normalizeThemePreference(value) {
+    return THEME_MODES.includes(value) ? value : "system";
+}
+
+function applyThemePreference(preference) {
+    currentThemePreference = normalizeThemePreference(preference);
+    if (currentThemePreference === "system") {
+        document.documentElement.removeAttribute("data-theme");
+    } else {
+        document.documentElement.setAttribute("data-theme", currentThemePreference);
+    }
+    updateThemeToggleUI(currentThemePreference);
+}
+
+function updateThemeToggleUI(preference) {
+    if (!themeToggle) return;
+    themeToggle.textContent = THEME_ICONS[preference] ?? THEME_ICONS.system;
+    const labelKey = preference === "dark"
+        ? "themeDark"
+        : preference === "light"
+            ? "themeLight"
+            : "themeSystem";
+    const label = chrome.i18n.getMessage(labelKey);
+    themeToggle.title = label;
+    themeToggle.setAttribute("aria-label", label);
 }
 
 /* ===== Render ===== */

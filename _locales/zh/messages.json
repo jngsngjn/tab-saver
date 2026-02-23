@@ -12,6 +12,10 @@
   "open": { "message": "打开" },
   "delete": { "message": "删除" },
 
+  "themeSystem": { "message": "主题：跟随系统" },
+  "themeLight": { "message": "主题：浅色" },
+  "themeDark": { "message": "主题：深色" },
+
   "savedToast": {
     "message": "已保存 $COUNT$ 个标签",
     "placeholders": {

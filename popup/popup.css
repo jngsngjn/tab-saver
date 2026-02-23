@@ -6,10 +6,12 @@
     --card:#111827;
     --text:#e5e7eb;
     --muted:#94a3b8;
+    --placeholder:#cbd5f5;
     --border:rgba(148,163,184,.18);
 
     --accent:#60a5fa;
     --accent2:#22c55e;
+    --toast-success:#16a34a;
     --danger:#ef4444;
 
     --radius:14px;
@@ -22,9 +24,33 @@
         --card:#ffffff;
         --text:#0f172a;
         --muted:#64748b;
+        --placeholder:#94a3b8;
         --border:rgba(15,23,42,.12);
         --shadow:0 10px 25px rgba(2,6,23,.08);
+        --toast-success:#22c55e;
     }
+}
+
+:root[data-theme="dark"]{
+    --bg:#0b0f17;
+    --card:#111827;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --placeholder:#cbd5f5;
+    --border:rgba(148,163,184,.18);
+    --toast-success:#16a34a;
+    --shadow:0 10px 25px rgba(0,0,0,.35);
+}
+
+:root[data-theme="light"]{
+    --bg:#f8fafc;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --placeholder:#94a3b8;
+    --border:rgba(15,23,42,.12);
+    --toast-success:#22c55e;
+    --shadow:0 10px 25px rgba(2,6,23,.08);
 }
 
 /* =====================
@@ -39,6 +65,7 @@ body{
     background:var(--bg);
     color:var(--text);
     font:13px/1.45 system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;
+    transition:background-color .2s ease, color .2s ease;
 }
 
 .hidden{ display:none !important; }
@@ -52,12 +79,20 @@ body{
     border-radius:var(--radius);
     box-shadow:var(--shadow);
     margin-bottom:10px;
+    transition:background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
 /* =====================
    Header
 ===================== */
 .header{ padding:12px; }
+
+.headerTop{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:8px;
+}
 
 .title{
     font-size:15px;
@@ -67,6 +102,7 @@ body{
 .sub{
     font-size:12px;
     color:var(--muted);
+    transition:color .2s ease;
 }
 
 /* =====================
@@ -75,6 +111,7 @@ body{
 .section{
     padding:12px;
     border-top:1px solid var(--border);
+    transition:border-color .2s ease;
 }
 
 .section:first-child{ border-top:none; }
@@ -89,6 +126,7 @@ body{
 .sectionTitle{
     font-size:12px;
     font-weight:700;
+    transition:color .2s ease;
 }
 
 /* =====================
@@ -107,6 +145,13 @@ body{
     border:1px solid var(--border);
     background:rgba(148,163,184,.06);
     color:var(--text);
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.input::placeholder{
+    color:var(--placeholder);
+    opacity:1;
+    transition:color .2s ease;
 }
 
 .input:focus{
@@ -126,6 +171,26 @@ body{
     color:var(--text);
     font-weight:700;
     cursor:pointer;
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.iconBtn{
+    width:28px;
+    height:28px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:rgba(148,163,184,.08);
+    color:var(--text);
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:14px;
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.iconBtn:hover{
+    background:rgba(148,163,184,.14);
 }
 
 .btn:hover{
@@ -175,6 +240,7 @@ body{
     border-radius:12px;
     padding:8px;
     background:rgba(148,163,184,.04);
+    transition:background-color .2s ease, border-color .2s ease;
 }
 
 /* Header */
@@ -196,6 +262,7 @@ body{
 .sessionMeta{
     font-size:11px;
     color:var(--muted);
+    transition:color .2s ease;
 }
 
 /* Arrow */
@@ -238,6 +305,7 @@ body{
     display:inline-flex;
     align-items:center;
     justify-content:center;
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
 }
 
 /* Open */
@@ -305,7 +373,9 @@ body{
     transition:
             max-height .2s ease,
             opacity .15s ease,
-            transform .15s ease;
+            transform .15s ease,
+            background-color .2s ease,
+            border-color .2s ease;
 }
 
 .urlList.hidden{
@@ -347,6 +417,7 @@ body{
     display:flex;
     align-items:center;
     gap:6px;
+    transition:background-color .2s ease, color .2s ease;
 }
 
 .urlText{
@@ -450,7 +521,7 @@ body{
     opacity:0;
     transform:translateY(-4px);
     pointer-events:none;
-    transition:opacity .2s ease, transform .2s ease;
+    transition:opacity .2s ease, transform .2s ease, background-color .2s ease, color .2s ease;
 }
 
 .toast.show{
@@ -459,7 +530,7 @@ body{
     pointer-events:auto;
 }
 
-.toast.success{ color:var(--accent2); }
+.toast.success{ color:var(--toast-success); }
 
 .toast.error{
     color:var(--danger);
@@ -505,6 +576,7 @@ body{
     color:var(--muted);
     text-align:center;
     margin-top:8px;
+    transition:color .2s ease;
 }
 
 /* =====================
@@ -570,7 +642,7 @@ body{
 ===================== */
 
 .sessionItem{
-    transition:transform .15s ease, opacity .15s ease;
+    transition:transform .15s ease, opacity .15s ease, background-color .2s ease, border-color .2s ease;
 }
 
 .sessionItem.dragging{

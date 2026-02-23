@@ -12,6 +12,10 @@
   "open": { "message": "Open" },
   "delete": { "message": "Delete" },
 
+  "themeSystem": { "message": "Theme: System" },
+  "themeLight": { "message": "Theme: Light" },
+  "themeDark": { "message": "Theme: Dark" },
+
   "savedToast": {
     "message": "Saved $COUNT$ tabs",
     "placeholders": {
