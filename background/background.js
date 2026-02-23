@@ -49,6 +49,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
+    if (message.type === "DELETE_URL") {
+        deleteUrl(message.sessionId, message.url, sendResponse, message.index);
+        return true;
+    }
+
     if (message.type === "RENAME_SESSION") {
         renameSession(message.sessionId, message.name, sendResponse);
         return true;
@@ -167,6 +172,35 @@ function deleteSession(sessionId, sendResponse) {
         chrome.storage.sync.set({ sessions: nextSessions }, () => {
             sendResponse({ success: true });
         });
+    });
+}
+
+/**
+ * 세션 내 특정 URL 삭제
+ */
+function deleteUrl(sessionId, url, sendResponse, index) {
+    chrome.storage.sync.get("sessions", (data) => {
+        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+        const target = sessions.find(s => s.id === sessionId);
+        
+        if (target) {
+            if (Number.isFinite(index) && index >= 0 && index < target.urls.length) {
+                target.urls.splice(index, 1);
+            } else {
+                target.urls = target.urls.filter(u => u !== url);
+            }
+            
+            // 만약 세션 내 탭이 하나도 남지 않았다면 세션 자체를 삭제
+            const nextSessions = target.urls.length === 0 
+                ? sessions.filter(s => s.id !== sessionId)
+                : sessions;
+
+            chrome.storage.sync.set({ sessions: nextSessions }, () => {
+                sendResponse({ success: true });
+            });
+        } else {
+            sendResponse({ success: false });
+        }
     });
 }
 

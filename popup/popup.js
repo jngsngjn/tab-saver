@@ -73,7 +73,7 @@ function onSave() {
 }
 
 /* ===== Render ===== */
-function renderSessionList() {
+function renderSessionList(openId = null) {
     chrome.storage.sync.get("sessions", ({ sessions }) => {
         const list = Array.isArray(sessions) ? sessions : [];
 
@@ -84,30 +84,41 @@ function renderSessionList() {
         }
 
         emptyHint.classList.add("hidden");
-        sessionList.innerHTML = list.map(renderSessionItem).join("");
+        sessionList.innerHTML = list.map(s => renderSessionItem(s, s.id === openId)).join("");
         bindSessionEvents();
     });
 }
 
-function renderSessionItem(session) {
+function renderSessionItem(session, isOpen = false) {
     const name = escapeHtml(session.name || "Untitled");
     const urls = Array.isArray(session.urls) ? session.urls : [];
 
     const urlItems = urls
-        .map(url => {
+        .map((url, index) => {
             const favicon = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
+
+            const displayUrl = escapeHtml(url);              // 화면 표시용
+            const dataUrl = encodeURIComponent(url);         // data attribute 용(안전)
+
             return `
             <li class="urlItem"
                 data-session-id="${session.id}"
-                data-url="${url}">
+                data-url="${dataUrl}"
+                data-index="${index}">
                 <img src="${favicon}" class="urlFavicon" alt="" />
-                ${url}
+                <span class="urlText">${displayUrl}</span>
+                <button class="urlDeleteBtn" 
+                        data-session-id="${session.id}" 
+                        data-url="${dataUrl}"
+                        data-index="${index}"
+                        title="${chrome.i18n.getMessage("delete")}">×</button>
             </li>
-        `;})
+        `;
+        })
         .join("");
 
     return `
-<li class="sessionItem"
+<li class="sessionItem ${isOpen ? "open" : ""}"
     data-id="${session.id}"
     draggable="true">
 
@@ -124,7 +135,7 @@ function renderSessionItem(session) {
         </div>
     </div>
 
-    <ul class="urlList hidden">${urlItems}</ul>
+    <ul class="urlList ${isOpen ? "" : "hidden"}">${urlItems}</ul>
 </li>
 `;
 }
@@ -139,6 +150,9 @@ function bindSessionEvents() {
 
     sessionList.querySelectorAll(".sessionHeader")
         .forEach(el => el.addEventListener("click", onToggle));
+
+    sessionList.querySelectorAll(".urlDeleteBtn")
+        .forEach(btn => btn.addEventListener("click", onUrlDelete));
 
     sessionList.querySelectorAll(".urlItem")
         .forEach(el => el.addEventListener("click", onUrlClick));
@@ -184,15 +198,63 @@ function onDelete(e) {
     e.stopPropagation();
     chrome.runtime.sendMessage(
         { type: "DELETE_SESSION", sessionId: e.currentTarget.dataset.id },
-        renderSessionList
+        () => renderSessionList()
     );
 }
 
 function onUrlClick(e) {
+    if (e.target.closest(".urlDeleteBtn")) return;
     e.stopPropagation();
-    restoreUrl(
-        e.currentTarget.dataset.url
+    const decodedUrl = decodeURIComponent(e.currentTarget.dataset.url);
+    restoreUrl(decodedUrl);
+}
+
+function onUrlDelete(e) {
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const sessionId = e.currentTarget.dataset.sessionId;
+    const index = Number(e.currentTarget.dataset.index);
+    const url = decodeURIComponent(e.currentTarget.dataset.url);
+
+    chrome.runtime.sendMessage(
+        { type: "DELETE_URL", sessionId, url, index },
+        (response) => {
+            if (chrome.runtime.lastError || !response || response.success === false) {
+                deleteUrlInStorage(sessionId, index, url, () => {
+                    renderSessionList(sessionId);
+                });
+                return;
+            }
+
+            renderSessionList(sessionId);
+        }
     );
+}
+
+function deleteUrlInStorage(sessionId, index, url, done) {
+    chrome.storage.sync.get("sessions", ({ sessions }) => {
+        const list = Array.isArray(sessions) ? sessions : [];
+        const target = list.find(s => s.id === sessionId);
+
+        if (target) {
+            if (Number.isFinite(index) && index >= 0 && index < target.urls.length) {
+                target.urls.splice(index, 1);
+            } else {
+                target.urls = target.urls.filter(u => u !== url);
+            }
+
+            const nextSessions = target.urls.length === 0
+                ? list.filter(s => s.id !== sessionId)
+                : list;
+
+            chrome.storage.sync.set({ sessions: nextSessions }, () => {
+                done?.();
+            });
+            return;
+        }
+
+        done?.();
+    });
 }
 
 /* ===== Restore ===== */

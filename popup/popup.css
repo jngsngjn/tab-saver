@@ -295,9 +295,39 @@ body{
     display:flex;
     align-items:center;
     gap:6px;
+}
+
+.urlText{
+    flex:1;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+
+.urlDeleteBtn{
+    width:18px;
+    height:18px;
+    border-radius:4px;
+    border:none;
+    background:transparent;
+    color:var(--muted);
+    font-size:14px;
+    line-height:1;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transition: all .15s ease;
+    opacity:0; /* Hover시에만 노출 */
+}
+
+.urlItem:hover .urlDeleteBtn{
+    opacity:1;
+}
+
+.urlDeleteBtn:hover{
+    background:rgba(239,68,68,.15);
+    color:var(--danger);
 }
 
 .urlFavicon{
