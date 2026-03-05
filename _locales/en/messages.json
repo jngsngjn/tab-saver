@@ -24,5 +24,6 @@
   },
 
   "noTabsToSave": { "message": "No tabs to save" },
+  "storageError": { "message": "Failed to save due to storage limit" },
   "nameTooLong": { "message": "Name must be 20 characters or less" }
 }

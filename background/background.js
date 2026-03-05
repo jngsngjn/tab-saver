@@ -66,7 +66,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 function saveSession(sendResponse, nameFromPopup) {
     chrome.tabs.query({ currentWindow: true }, (tabs) => {
         const urls = tabs
-            .map(tab => tab.url)
+            .map(tab => {
+                const url = tab.url || tab.pendingUrl;
+                return extractOriginalUrl(url);
+            })
             .filter(isSavableUrl);
 
         // ✅ 1차 방어
@@ -101,6 +104,14 @@ function saveSession(sendResponse, nameFromPopup) {
             sessions.unshift(session);
 
             chrome.storage.sync.set({ sessions }, () => {
+                if (chrome.runtime.lastError) {
+                    console.error("Storage Error:", chrome.runtime.lastError);
+                    sendResponse({
+                        success: false,
+                        reason: "STORAGE_ERROR"
+                    });
+                    return;
+                }
                 sendResponse({
                     success: true,
                     count: urls.length
@@ -170,6 +181,11 @@ function deleteSession(sessionId, sendResponse) {
         const nextSessions = sessions.filter(s => s.id !== sessionId);
 
         chrome.storage.sync.set({ sessions: nextSessions }, () => {
+            if (chrome.runtime.lastError) {
+                console.error("Storage Error:", chrome.runtime.lastError);
+                sendResponse({ success: false, reason: "STORAGE_ERROR" });
+                return;
+            }
             sendResponse({ success: true });
         });
     });
@@ -196,6 +212,11 @@ function deleteUrl(sessionId, url, sendResponse, index) {
                 : sessions;
 
             chrome.storage.sync.set({ sessions: nextSessions }, () => {
+                if (chrome.runtime.lastError) {
+                    console.error("Storage Error:", chrome.runtime.lastError);
+                    sendResponse({ success: false, reason: "STORAGE_ERROR" });
+                    return;
+                }
                 sendResponse({ success: true });
             });
         } else {
@@ -250,9 +271,35 @@ function renameSession(sessionId, newName, sendResponse) {
         target.name = newName;
 
         chrome.storage.sync.set({ sessions }, () => {
+            if (chrome.runtime.lastError) {
+                console.error("Storage Error:", chrome.runtime.lastError);
+                sendResponse({ success: false, reason: "STORAGE_ERROR" });
+                return;
+            }
             sendResponse({ success: true });
         });
     });
+}
+
+/**
+ * PDF 뷰어 등 특수 URL에서 실제 URL을 추출
+ */
+function extractOriginalUrl(url) {
+    if (!url) return url;
+
+    // 크롬 내장 PDF 뷰어 또는 common pdf.js 기반 뷰어 처리
+    if (url.startsWith("chrome-extension://") && (url.includes("viewer.html") || url.includes("pdf.js"))) {
+        try {
+            const urlObj = new URL(url);
+            const fileParam = urlObj.searchParams.get("file");
+            if (fileParam && (fileParam.startsWith("http") || fileParam.startsWith("file"))) {
+                return fileParam;
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+    return url;
 }
 
 function isSavableUrl(url) {
@@ -268,10 +315,13 @@ function isSavableUrl(url) {
         return false;
     }
 
-    // http, https, file 프로토콜 허용
+    // http, https, file, chrome-extension, view-source 프로토콜 허용
+    // chrome-extension://은 크롬 내장 PDF 뷰어 등을 위해 허용
     return (
         url.startsWith("http://") ||
         url.startsWith("https://") ||
-        url.startsWith("file://")
+        url.startsWith("file://") ||
+        url.startsWith("chrome-extension://") ||
+        url.startsWith("view-source:")
     );
 }

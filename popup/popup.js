@@ -79,10 +79,10 @@ function onSave() {
         { type: "SAVE_SESSION", name },
         (res) => {
             if (!res || res.success === false) {
-                showToast(
-                    chrome.i18n.getMessage("noTabsToSave"),
-                    "error"
-                );
+                const message = (res && res.reason === "STORAGE_ERROR")
+                    ? chrome.i18n.getMessage("storageError")
+                    : chrome.i18n.getMessage("noTabsToSave");
+                showToast(message, "error");
                 return;
             }
 

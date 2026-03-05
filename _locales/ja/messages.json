@@ -24,5 +24,6 @@
   },
 
   "noTabsToSave": { "message": "保存できるタブがありません" },
+  "storageError": { "message": "ストレージ容量不足のため保存に失敗しました" },
   "nameTooLong": { "message": "名前は20文字以内で入力してください" }
 }

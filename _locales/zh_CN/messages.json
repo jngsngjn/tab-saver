@@ -24,5 +24,6 @@
   },
 
   "noTabsToSave": { "message": "没有可保存的标签" },
+  "storageError": { "message": "由于存储限制，保存失败" },
   "nameTooLong": { "message": "名称不能超过 20 个字符" }
 }

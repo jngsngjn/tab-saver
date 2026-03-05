@@ -24,5 +24,6 @@
   },
 
   "noTabsToSave": { "message": "저장할 수 있는 탭이 없어요" },
+  "storageError": { "message": "저장 용량 초과로 인해 저장하지 못했습니다" },
   "nameTooLong": { "message": "이름은 20자 이내로 입력해주세요" }
 }
