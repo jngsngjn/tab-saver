@@ -11,6 +11,7 @@
 
   "open": { "message": "開く" },
   "delete": { "message": "削除" },
+  "deleteNow": { "message": "今すぐ削除" },
 
   "themeSystem": { "message": "テーマ: システム" },
   "themeLight": { "message": "テーマ: ライト" },
@@ -25,5 +26,7 @@
 
   "noTabsToSave": { "message": "保存できるタブがありません" },
   "storageError": { "message": "ストレージ容量不足のため保存に失敗しました" },
-  "nameTooLong": { "message": "名前は20文字以内で入力してください" }
+  "nameTooLong": { "message": "名前は20文字以内で入力してください" },
+  "fileAccessDenied": { "message": "ローカルファイルを開くには、'ファイルの URL へのアクセスを許可する'設定が必要です。" },
+  "fileNotFound": { "message": "ファイルが見つからないか、移動された可能性があります: $FILE$", "placeholders": { "file": { "content": "$1" } } }
 }

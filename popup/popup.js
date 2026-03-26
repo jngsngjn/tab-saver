@@ -32,6 +32,12 @@ function applyI18n() {
 }
 
 /* ===== Init ===== */
+chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === "SHOW_TOAST") {
+        showToast(message.message, message.toastType);
+    }
+});
+
 chrome.storage.sync.get([
     "openInNewWindow",
     THEME_PREFERENCE_KEY
@@ -172,20 +178,21 @@ function renderSessionItem(session, isOpen = false) {
         })
         .join("");
 
+    const isDeleting = pendingDeletes.has(session.id);
     return `
-<li class="sessionItem ${isOpen ? "open" : ""}"
+<li class="sessionItem ${isOpen ? "open" : ""} ${isDeleting ? "deleteLocked" : ""}"
     data-id="${session.id}"
     draggable="true">
 
     <div class="sessionHeader">
         <div class="sessionName">
             <span class="arrow">▶</span>
-            <span>${name}</span>
+            <span class="sessionNameText">${name}</span>
             <span class="sessionMeta">(${urls.length})</span>
         </div>
 
         <div class="actions">
-            <button class="openBtn" data-id="${session.id}">${chrome.i18n.getMessage("open")}</button>
+            <button class="openBtn" data-id="${session.id}">${chrome.i18n.getMessage(pendingDeletes.has(session.id) ? "deleteNow" : "open")}</button>
             <button class="deleteBtn" data-id="${session.id}">${chrome.i18n.getMessage("delete")}</button>
         </div>
     </div>
@@ -249,8 +256,21 @@ function onOpen(e) {
     e.stopPropagation();
     const sessionId = e.currentTarget.dataset.id;
     const item = e.currentTarget.closest(".sessionItem");
-    if (item?.classList.contains("deleteLocked")) return;
+    if (item?.classList.contains("deleteLocked")) {
+        executeImmediateDelete(sessionId);
+        return;
+    }
     restoreSession(sessionId);
+}
+
+function executeImmediateDelete(sessionId) {
+    const state = pendingDeletes.get(sessionId);
+    if (state) {
+        clearInterval(state.interval);
+        clearTimeout(state.timer);
+        state.execute();
+        pendingDeletes.delete(sessionId);
+    }
 }
 
 function onDelete(e) {
@@ -508,12 +528,22 @@ function lockSessionForDelete(sessionId) {
     item.classList.add("deleteLocked");
     item.classList.remove("open");
     item.querySelector(".urlList")?.classList.add("hidden");
+
+    const openBtn = item.querySelector(".openBtn");
+    if (openBtn) {
+        openBtn.textContent = chrome.i18n.getMessage("deleteNow");
+    }
 }
 
 function unlockSessionForDelete(sessionId) {
     const item = sessionList.querySelector(`.sessionItem[data-id="${sessionId}"]`);
     if (!item) return;
     item.classList.remove("deleteLocked");
+
+    const openBtn = item.querySelector(".openBtn");
+    if (openBtn) {
+        openBtn.textContent = chrome.i18n.getMessage("open");
+    }
 }
 function onDragStart(e) {
     draggedItem = e.currentTarget;

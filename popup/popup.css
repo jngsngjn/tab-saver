@@ -248,6 +248,7 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:center;
+    gap:12px;
     cursor:pointer;
 }
 
@@ -257,12 +258,23 @@ body{
     gap:6px;
     font-weight:700;
     font-size:13px;
+    flex:1;
+    min-width:0;
+}
+
+.sessionNameText{
+    flex:1;
+    min-width:0;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
 }
 
 .sessionMeta{
     font-size:11px;
     color:var(--muted);
     transition:color .2s ease;
+    flex-shrink:0;
 }
 
 /* Arrow */
@@ -289,6 +301,7 @@ body{
 .actions{
     display:flex;
     gap:6px;
+    flex-shrink:0;
 }
 
 /* =====================
@@ -399,13 +412,13 @@ body{
 }
 
 .sessionItem.deleteLocked .openBtn{
-    background:rgba(148,163,184,.35);
-    border-color:rgba(148,163,184,.55);
-    color:#e2e8f0;
+    border:1px solid rgba(239,68,68,.45);
+    background:rgba(239,68,68,.18);
+    color:#fecaca;
 }
 
 .sessionItem.deleteLocked .openBtn:hover{
-    background:rgba(148,163,184,.35);
+    background:rgba(239,68,68,.3);
 }
 
 .urlItem{
@@ -606,6 +619,16 @@ body{
         background:#fee2e2;
         border-color:#fca5a5;
         color:#b91c1c;
+    }
+
+    .sessionItem.deleteLocked .openBtn{
+        background:#fee2e2;
+        border-color:#fca5a5;
+        color:#b91c1c;
+    }
+
+    .sessionItem.deleteLocked .openBtn:hover{
+        background:#fecaca;
     }
 
     .deleteBtn:hover{

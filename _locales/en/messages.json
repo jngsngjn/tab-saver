@@ -11,6 +11,7 @@
 
   "open": { "message": "Open" },
   "delete": { "message": "Delete" },
+  "deleteNow": { "message": "Delete Now" },
 
   "themeSystem": { "message": "Theme: System" },
   "themeLight": { "message": "Theme: Light" },
@@ -25,5 +26,7 @@
 
   "noTabsToSave": { "message": "No tabs to save" },
   "storageError": { "message": "Failed to save due to storage limit" },
-  "nameTooLong": { "message": "Name must be 20 characters or less" }
+  "nameTooLong": { "message": "Name must be 20 characters or less" },
+  "fileAccessDenied": { "message": "The 'Allow access to file URLs' permission is required to open local files." },
+  "fileNotFound": { "message": "File not found or moved: $FILE$", "placeholders": { "file": { "content": "$1" } } }
 }

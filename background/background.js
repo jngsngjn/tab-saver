@@ -41,7 +41,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
 
     if (message.type === "RESTORE_URL") {
-        chrome.tabs.create({ url: message.url });
+        restoreUrl(message.url);
     }
 
     if (message.type === "DELETE_SESSION") {
@@ -228,23 +228,128 @@ function deleteUrl(sessionId, url, sendResponse, index) {
 /* ---------- 복원 로직 ---------- */
 
 function restoreInCurrentWindow(urls) {
-    chrome.tabs.query({ currentWindow: true }, (tabs) => {
-        if (tabs.length === 1 && tabs[0].url === "chrome://newtab/") {
-            chrome.tabs.remove(tabs[0].id);
-        }
-        urls.forEach(url => chrome.tabs.create({ url }));
+    checkFileAccess(urls, (allowed) => {
+        chrome.tabs.query({ currentWindow: true }, (tabs) => {
+            if (tabs.length === 1 && tabs[0].url === "chrome://newtab/") {
+                chrome.tabs.remove(tabs[0].id);
+            }
+            urls.forEach(url => {
+                if (url.startsWith("file://") && !allowed) {
+                    notifyFileAccessError();
+                    return;
+                }
+                chrome.tabs.create({ url }, (tab) => {
+                    if (url.startsWith("file://")) {
+                        monitorFileTab(tab.id, url);
+                    }
+                });
+            });
+        });
     });
 }
 
 function restoreInNewWindow(urls) {
-    chrome.windows.create({}, (newWindow) => {
-        chrome.tabs.query({ windowId: newWindow.id }, (tabs) => {
-            chrome.tabs.update(tabs[0].id, { url: urls[0] });
-            urls.slice(1).forEach(url => {
-                chrome.tabs.create({ windowId: newWindow.id, url });
+    checkFileAccess(urls, (allowed) => {
+        chrome.windows.create({}, (newWindow) => {
+            chrome.tabs.query({ windowId: newWindow.id }, (tabs) => {
+                const firstUrl = urls[0];
+                const isFirstFile = firstUrl.startsWith("file://");
+
+                if (isFirstFile && !allowed) {
+                    notifyFileAccessError();
+                } else {
+                    chrome.tabs.update(tabs[0].id, { url: firstUrl }, (tab) => {
+                        if (isFirstFile) monitorFileTab(tab.id, firstUrl);
+                    });
+                }
+
+                urls.slice(1).forEach(url => {
+                    if (url.startsWith("file://") && !allowed) {
+                        notifyFileAccessError();
+                        return;
+                    }
+                    chrome.tabs.create({ windowId: newWindow.id, url }, (tab) => {
+                        if (url.startsWith("file://")) {
+                            monitorFileTab(tab.id, url);
+                        }
+                    });
+                });
             });
         });
     });
+}
+
+/**
+ * 개별 URL 복원
+ */
+function restoreUrl(url) {
+    if (url.startsWith("file://")) {
+        chrome.extension.isAllowedFileSchemeAccess((allowed) => {
+            if (!allowed) {
+                notifyFileAccessError();
+            } else {
+                chrome.tabs.create({ url }, (tab) => {
+                    monitorFileTab(tab.id, url);
+                });
+            }
+        });
+    } else {
+        chrome.tabs.create({ url });
+    }
+}
+
+/**
+ * 로컬 파일 권한 확인
+ */
+function checkFileAccess(urls, callback) {
+    const hasFileUrl = urls.some(url => url.startsWith("file://"));
+    if (hasFileUrl) {
+        chrome.extension.isAllowedFileSchemeAccess(callback);
+    } else {
+        callback(true);
+    }
+}
+
+/**
+ * 파일 접근 권한 부족 알림
+ */
+function notifyFileAccessError() {
+    chrome.runtime.sendMessage({
+        type: "SHOW_TOAST",
+        message: chrome.i18n.getMessage("fileAccessDenied"),
+        toastType: "error"
+    });
+}
+
+/**
+ * 파일 탭 로딩 상태 모니터링
+ */
+function monitorFileTab(tabId, url) {
+    const listener = (updatedTabId, changeInfo, tab) => {
+        if (updatedTabId === tabId && changeInfo.status === "complete") {
+            // 로컬 파일의 경우 존재하지 않으면 title이 파일명이 아니거나, 
+            // URL이 chrome-error:// 등으로 리다이렉트될 수 있음
+            // 하지만 크롬 버전에 따라 동작이 다를 수 있으므로 
+            // 가장 확실한 방법 중 하나는 삽입된 스크립트가 실행되는지 확인하는 것이나
+            // file:// 에서는 스크립트 실행도 제한될 수 있음.
+            // 여기서는 단순하게 title이나 url 변화를 체크해볼 수 있음.
+            
+            if (tab.url.startsWith("chrome-error://")) {
+                chrome.runtime.sendMessage({
+                    type: "SHOW_TOAST",
+                    message: chrome.i18n.getMessage("fileNotFound", [url.replace("file:///", "")]),
+                    toastType: "error"
+                });
+                chrome.tabs.onUpdated.removeListener(listener);
+            }
+        }
+    };
+    chrome.tabs.onUpdated.addListener(listener);
+    
+    // 5초 후에는 리스너 제거 (타임아웃)
+    setTimeout(() => {
+        chrome.tabs.onUpdated.removeListener(listener);
+    }, 5000);
 }
 
 /**

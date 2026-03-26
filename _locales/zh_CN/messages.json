@@ -11,6 +11,7 @@
 
   "open": { "message": "打开" },
   "delete": { "message": "删除" },
+  "deleteNow": { "message": "立即删除" },
 
   "themeSystem": { "message": "主题：跟随系统" },
   "themeLight": { "message": "主题：浅色" },
@@ -25,5 +26,7 @@
 
   "noTabsToSave": { "message": "没有可保存的标签" },
   "storageError": { "message": "由于存储限制，保存失败" },
-  "nameTooLong": { "message": "名称不能超过 20 个字符" }
+  "nameTooLong": { "message": "名称不能超过 20 个字符" },
+  "fileAccessDenied": { "message": "打开本地文件需要开启'允许访问文件 URL'的设置。" },
+  "fileNotFound": { "message": "找不到文件或文件已移动: $FILE$", "placeholders": { "file": { "content": "$1" } } }
 }
