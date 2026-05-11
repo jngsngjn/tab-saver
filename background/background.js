@@ -16,6 +16,10 @@ chrome.runtime.onInstalled.addListener(() => {
     });
 });
 
+const DELETE_UNDO_MS = 3000;
+const PENDING_SESSION_DELETES_KEY = "pendingSessionDeletes";
+const pendingSessionDeletes = new Map();
+
 /**
  * Popup에서 전달되는 메시지를 처리
  * - SAVE_SESSION
@@ -32,14 +36,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         restoreSession(message.sessionId, message.openInNewWindow);
     }
 
-    if (message.type === "RESTORE_DOMAIN") {
-        restoreDomain(
-            message.sessionId,
-            message.domain,
-            message.openInNewWindow
-        );
-    }
-
     if (message.type === "RESTORE_URL") {
         restoreUrl(message.url);
     }
@@ -49,16 +45,123 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return true;
     }
 
+    if (message.type === "SCHEDULE_DELETE_SESSION") {
+        scheduleDeleteSession(message.sessionId);
+    }
+
+    if (message.type === "CANCEL_DELETE_SESSION") {
+        cancelDeleteSession(message.sessionId);
+    }
+
+    if (message.type === "GET_PENDING_SESSION_DELETES") {
+        getPendingSessionDeletes(sendResponse);
+        return true;
+    }
+
     if (message.type === "DELETE_URL") {
         deleteUrl(message.sessionId, message.url, sendResponse, message.index);
         return true;
     }
 
-    if (message.type === "RENAME_SESSION") {
-        renameSession(message.sessionId, message.name, sendResponse);
-        return true;
-    }
 });
+
+function scheduleDeleteSession(sessionId) {
+    if (!sessionId) return;
+
+    clearDeleteTimer(sessionId);
+    const dueAt = Date.now() + DELETE_UNDO_MS;
+
+    chrome.storage.local.get(PENDING_SESSION_DELETES_KEY, (data) => {
+        const pending = data[PENDING_SESSION_DELETES_KEY] || {};
+        pending[sessionId] = dueAt;
+        chrome.storage.local.set({ [PENDING_SESSION_DELETES_KEY]: pending }, () => {
+            startDeleteTimer(sessionId, dueAt);
+        });
+    });
+}
+
+function cancelDeleteSession(sessionId) {
+    clearDeleteTimer(sessionId);
+
+    chrome.storage.local.get(PENDING_SESSION_DELETES_KEY, (data) => {
+        const pending = data[PENDING_SESSION_DELETES_KEY] || {};
+        delete pending[sessionId];
+        chrome.storage.local.set({ [PENDING_SESSION_DELETES_KEY]: pending });
+    });
+}
+
+function getPendingSessionDeletes(sendResponse) {
+    chrome.storage.local.get(PENDING_SESSION_DELETES_KEY, (data) => {
+        const pending = data[PENDING_SESSION_DELETES_KEY] || {};
+        const now = Date.now();
+        const active = {};
+        const expiredSessionIds = [];
+
+        Object.entries(pending).forEach(([sessionId, dueAt]) => {
+            if (dueAt <= now) {
+                expiredSessionIds.push(sessionId);
+                return;
+            }
+
+            active[sessionId] = dueAt;
+            startDeleteTimer(sessionId, dueAt);
+        });
+
+        const respond = () => {
+            chrome.storage.local.set({ [PENDING_SESSION_DELETES_KEY]: active }, () => {
+                sendResponse(active);
+            });
+        };
+
+        if (!expiredSessionIds.length) {
+            respond();
+            return;
+        }
+
+        let remainingDeletes = expiredSessionIds.length;
+        expiredSessionIds.forEach((sessionId) => {
+            deleteSession(sessionId, () => {
+                remainingDeletes -= 1;
+                if (remainingDeletes === 0) {
+                    respond();
+                }
+            });
+        });
+    });
+}
+
+function startDeleteTimer(sessionId, dueAt) {
+    clearDeleteTimer(sessionId);
+
+    const delay = Math.max(0, dueAt - Date.now());
+    const timer = setTimeout(() => {
+        removePendingSessionDelete(sessionId, () => {
+            deleteSession(sessionId, () => {});
+        });
+    }, delay);
+
+    pendingSessionDeletes.set(sessionId, timer);
+}
+
+function clearDeleteTimer(sessionId) {
+    const timer = pendingSessionDeletes.get(sessionId);
+    if (!timer) return;
+
+    clearTimeout(timer);
+    pendingSessionDeletes.delete(sessionId);
+}
+
+function removePendingSessionDelete(sessionId, done) {
+    clearDeleteTimer(sessionId);
+
+    chrome.storage.local.get(PENDING_SESSION_DELETES_KEY, (data) => {
+        const pending = data[PENDING_SESSION_DELETES_KEY] || {};
+        delete pending[sessionId];
+        chrome.storage.local.set({ [PENDING_SESSION_DELETES_KEY]: pending }, () => {
+            done?.();
+        });
+    });
+}
 
 /**
  * 현재 창의 탭을 세션으로 저장
@@ -68,9 +171,15 @@ function saveSession(sendResponse, nameFromPopup) {
         const urls = tabs
             .map(tab => {
                 const url = tab.url || tab.pendingUrl;
-                return extractOriginalUrl(url);
+                const originalUrl = extractOriginalUrl(url);
+                if (!isSavableUrl(originalUrl)) return null;
+
+                return {
+                    url: originalUrl,
+                    title: tab.title || originalUrl
+                };
             })
-            .filter(isSavableUrl);
+            .filter(Boolean);
 
         // ✅ 1차 방어
         if (urls.length === 0) {
@@ -130,38 +239,7 @@ function restoreSession(sessionId, openInNewWindow) {
     chrome.storage.sync.get("sessions", (data) => {
         const sessions = Array.isArray(data.sessions) ? data.sessions : [];
         const session = sessions.find(s => s.id === sessionId);
-        if (!session || !session.urls.length) return;
-
-        if (openInNewWindow) {
-            restoreInNewWindow(session.urls);
-        } else {
-            restoreInCurrentWindow(session.urls);
-        }
-    });
-}
-
-/**
- * 특정 세션에서 특정 도메인만 복원
- */
-function restoreDomain(sessionId, domain, openInNewWindow) {
-    if (!sessionId || !domain) return;
-
-    chrome.storage.sync.get("sessions", (data) => {
-        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-        const session = sessions.find(s => s.id === sessionId);
-        if (!session) return;
-
-        const urls = session.urls.filter((url) => {
-            try {
-                if (url.startsWith("file://")) {
-                    return domain === "Local Files";
-                }
-                return new URL(url).hostname === domain;
-            } catch {
-                return false;
-            }
-        });
-
+        const urls = getSessionUrls(session);
         if (!urls.length) return;
 
         if (openInNewWindow) {
@@ -203,7 +281,7 @@ function deleteUrl(sessionId, url, sendResponse, index) {
             if (Number.isFinite(index) && index >= 0 && index < target.urls.length) {
                 target.urls.splice(index, 1);
             } else {
-                target.urls = target.urls.filter(u => u !== url);
+                target.urls = target.urls.filter(u => getSavedUrl(u) !== url);
             }
             
             // 만약 세션 내 탭이 하나도 남지 않았다면 세션 자체를 삭제
@@ -364,26 +442,17 @@ function formatSessionName(timestamp) {
     ).padStart(2, "0")}`;
 }
 
-function renameSession(sessionId, newName, sendResponse) {
-    if (!sessionId || !newName) return;
+function getSessionUrls(session) {
+    const items = session && Array.isArray(session.urls) ? session.urls : [];
+    return items
+        .map(getSavedUrl)
+        .filter(Boolean);
+}
 
-    chrome.storage.sync.get("sessions", (data) => {
-        const sessions = Array.isArray(data.sessions) ? data.sessions : [];
-
-        const target = sessions.find(s => s.id === sessionId);
-        if (!target) return;
-
-        target.name = newName;
-
-        chrome.storage.sync.set({ sessions }, () => {
-            if (chrome.runtime.lastError) {
-                console.error("Storage Error:", chrome.runtime.lastError);
-                sendResponse({ success: false, reason: "STORAGE_ERROR" });
-                return;
-            }
-            sendResponse({ success: true });
-        });
-    });
+function getSavedUrl(item) {
+    if (typeof item === "string") return item;
+    if (item && typeof item.url === "string") return item.url;
+    return "";
 }
 
 /**
@@ -393,18 +462,34 @@ function extractOriginalUrl(url) {
     if (!url) return url;
 
     // 크롬 내장 PDF 뷰어 또는 common pdf.js 기반 뷰어 처리
-    if (url.startsWith("chrome-extension://") && (url.includes("viewer.html") || url.includes("pdf.js"))) {
+    if (url.startsWith("chrome-extension://") && isPdfViewerUrl(url)) {
         try {
             const urlObj = new URL(url);
-            const fileParam = urlObj.searchParams.get("file");
-            if (fileParam && (fileParam.startsWith("http") || fileParam.startsWith("file"))) {
-                return fileParam;
+            const originalUrl = urlObj.searchParams.get("file") || urlObj.searchParams.get("src");
+            if (isRestorableUrl(originalUrl)) {
+                return originalUrl;
             }
         } catch (e) {
             // ignore
         }
     }
     return url;
+}
+
+function isPdfViewerUrl(url) {
+    return (
+        url.includes("viewer.html") ||
+        url.includes("pdf.js") ||
+        url.includes("mhjfbmdgcfjbbpaeojofohoefgiehjai")
+    );
+}
+
+function isRestorableUrl(url) {
+    return Boolean(url) && (
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("file://")
+    );
 }
 
 function isSavableUrl(url) {

@@ -550,37 +550,6 @@ body{
     background:rgba(239,68,68,.12);
 }
 
-.toast.pending{
-    color:var(--accent);
-    text-align:left;
-}
-
-.toastContent{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-}
-
-.toastText{
-    flex:1;
-}
-
-.toastUndoBtn{
-    padding:4px 8px;
-    border-radius:999px;
-    border:1px solid var(--border);
-    background:transparent;
-    color:var(--accent);
-    font-weight:700;
-    font-size:11px;
-    cursor:pointer;
-}
-
-.toastUndoBtn:hover{
-    background:rgba(96,165,250,.12);
-}
-
 /* =====================
    Hint
 ===================== */

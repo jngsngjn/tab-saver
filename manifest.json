@@ -5,9 +5,10 @@
   "description": "__MSG_appDesc__",
   "default_locale": "en",
 
-  "version": "1.2.1",
+  "version": "1.2.2",
 
   "permissions": ["tabs", "storage", "activeTab", "scripting", "favicon"],
+  "host_permissions": ["file:///*"],
 
   "action": {
     "default_popup": "popup/popup.html"
