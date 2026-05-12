@@ -169,7 +169,7 @@ function renderSessionItem(session, isOpen = false) {
                 data-url="${dataUrl}"
                 data-index="${index}">
                 <img src="${favicon}" class="urlFavicon" alt="" />
-                <span class="urlText" title="${escapeHtml(url)}">${displayTitle}</span>
+                <span class="urlText" title="${displayTitle}">${displayTitle}</span>
                 <button class="urlDeleteBtn${isLastUrl ? " disabled" : ""}"
                         ${isLastUrl ? "disabled" : ""}
                         data-session-id="${session.id}" 
@@ -368,7 +368,15 @@ function getSavedTitle(item) {
     if (item && typeof item.title === "string" && item.title.trim()) {
         return item.title;
     }
-    return getSavedUrl(item);
+    return decodeReadableUrl(getSavedUrl(item));
+}
+
+function decodeReadableUrl(url) {
+    try {
+        return decodeURI(url);
+    } catch {
+        return url;
+    }
 }
 
 function restoreUrl(url) {
