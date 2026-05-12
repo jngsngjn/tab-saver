@@ -311,12 +311,13 @@ function restoreInCurrentWindow(urls) {
             if (tabs.length === 1 && tabs[0].url === "chrome://newtab/") {
                 chrome.tabs.remove(tabs[0].id);
             }
-            urls.forEach(url => {
+            const firstRestorableIndex = urls.findIndex(url => !url.startsWith("file://") || allowed);
+            urls.forEach((url, index) => {
                 if (url.startsWith("file://") && !allowed) {
                     notifyFileAccessError();
                     return;
                 }
-                chrome.tabs.create({ url }, (tab) => {
+                chrome.tabs.create({ url, active: index === firstRestorableIndex }, (tab) => {
                     if (url.startsWith("file://")) {
                         monitorFileTab(tab.id, url);
                     }
@@ -346,12 +347,13 @@ function restoreInNewWindow(urls) {
                         notifyFileAccessError();
                         return;
                     }
-                    chrome.tabs.create({ windowId: newWindow.id, url }, (tab) => {
+                    chrome.tabs.create({ windowId: newWindow.id, url, active: false }, (tab) => {
                         if (url.startsWith("file://")) {
                             monitorFileTab(tab.id, url);
                         }
                     });
                 });
+                chrome.windows.update(newWindow.id, { focused: true });
             });
         });
     });
