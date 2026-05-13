@@ -2,6 +2,7 @@
    Theme Variables
 ===================== */
 :root{
+    color-scheme:dark;
     --bg:#0b0f17;
     --card:#111827;
     --text:#e5e7eb;
@@ -20,6 +21,7 @@
 
 @media (prefers-color-scheme: light){
     :root{
+        color-scheme:light;
         --bg:#f8fafc;
         --card:#ffffff;
         --text:#0f172a;
@@ -32,6 +34,7 @@
 }
 
 :root[data-theme="dark"]{
+    color-scheme:dark;
     --bg:#0b0f17;
     --card:#111827;
     --text:#e5e7eb;
@@ -43,6 +46,7 @@
 }
 
 :root[data-theme="light"]{
+    color-scheme:light;
     --bg:#f8fafc;
     --card:#ffffff;
     --text:#0f172a;
@@ -51,6 +55,60 @@
     --border:rgba(15,23,42,.12);
     --toast-success:#22c55e;
     --shadow:0 10px 25px rgba(2,6,23,.08);
+}
+
+:root[data-theme="light"] .openBtn{
+    background:#e0edff;
+    border-color:#93c5fd;
+    color:#1d4ed8;
+}
+
+:root[data-theme="light"] .openBtn:hover{
+    background:#cfe2ff;
+}
+
+:root[data-theme="light"] .deleteBtn{
+    background:#fee2e2;
+    border-color:#fca5a5;
+    color:#b91c1c;
+}
+
+:root[data-theme="light"] .sessionItem.deleteLocked .openBtn{
+    background:#fee2e2;
+    border-color:#fca5a5;
+    color:#b91c1c;
+}
+
+:root[data-theme="light"] .sessionItem.deleteLocked .openBtn:hover{
+    background:#fecaca;
+}
+
+:root[data-theme="light"] .deleteBtn:hover{
+    background:#fecaca;
+}
+
+:root[data-theme="light"] .deleteBtn.deleting{
+    background:#fecaca;
+    border-color:#f87171;
+    color:#991b1b;
+}
+
+:root[data-theme="light"] .deleteBtn.deleting.deletingStep3{
+    background:#fecaca;
+    border-color:#f87171;
+    color:#991b1b;
+}
+
+:root[data-theme="light"] .deleteBtn.deleting.deletingStep2{
+    background:#fca5a5;
+    border-color:#ef4444;
+    color:#991b1b;
+}
+
+:root[data-theme="light"] .deleteBtn.deleting.deletingStep1{
+    background:#f87171;
+    border-color:#dc2626;
+    color:#7f1d1d;
 }
 
 /* =====================

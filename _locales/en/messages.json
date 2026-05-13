@@ -28,5 +28,6 @@
   "storageError": { "message": "Failed to save due to storage limit" },
   "nameTooLong": { "message": "Name must be 20 characters or less" },
   "fileAccessDenied": { "message": "The 'Allow access to file URLs' permission is required to open local files." },
+  "fileAccessSettingsConfirm": { "message": "Files cannot be opened because 'Allow access to file URLs' is turned off. Open the extension settings page?" },
   "fileNotFound": { "message": "File not found or moved: $FILE$", "placeholders": { "file": { "content": "$1" } } }
 }

@@ -314,7 +314,6 @@ function restoreInCurrentWindow(urls) {
             const firstRestorableIndex = urls.findIndex(url => !url.startsWith("file://") || allowed);
             urls.forEach((url, index) => {
                 if (url.startsWith("file://") && !allowed) {
-                    notifyFileAccessError();
                     return;
                 }
                 chrome.tabs.create({ url, active: index === firstRestorableIndex }, (tab) => {
@@ -334,9 +333,7 @@ function restoreInNewWindow(urls) {
                 const firstUrl = urls[0];
                 const isFirstFile = firstUrl.startsWith("file://");
 
-                if (isFirstFile && !allowed) {
-                    notifyFileAccessError();
-                } else {
+                if (!isFirstFile || allowed) {
                     chrome.tabs.update(tabs[0].id, { url: firstUrl }, (tab) => {
                         if (isFirstFile) monitorFileTab(tab.id, firstUrl);
                     });
@@ -344,7 +341,6 @@ function restoreInNewWindow(urls) {
 
                 urls.slice(1).forEach(url => {
                     if (url.startsWith("file://") && !allowed) {
-                        notifyFileAccessError();
                         return;
                     }
                     chrome.tabs.create({ windowId: newWindow.id, url, active: false }, (tab) => {
@@ -365,9 +361,7 @@ function restoreInNewWindow(urls) {
 function restoreUrl(url) {
     if (url.startsWith("file://")) {
         chrome.extension.isAllowedFileSchemeAccess((allowed) => {
-            if (!allowed) {
-                notifyFileAccessError();
-            } else {
+            if (allowed) {
                 chrome.tabs.create({ url }, (tab) => {
                     monitorFileTab(tab.id, url);
                 });
@@ -388,17 +382,6 @@ function checkFileAccess(urls, callback) {
     } else {
         callback(true);
     }
-}
-
-/**
- * 파일 접근 권한 부족 알림
- */
-function notifyFileAccessError() {
-    chrome.runtime.sendMessage({
-        type: "SHOW_TOAST",
-        message: chrome.i18n.getMessage("fileAccessDenied"),
-        toastType: "error"
-    });
 }
 
 /**

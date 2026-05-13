@@ -349,13 +349,49 @@ function deleteUrlInStorage(sessionId, index, url, done) {
 
 /* ===== Restore ===== */
 function restoreSession(sessionId) {
-    chrome.storage.sync.get("openInNewWindow", ({ openInNewWindow }) => {
-        chrome.runtime.sendMessage({
-            type: "RESTORE_SESSION",
-            sessionId,
-            openInNewWindow: Boolean(openInNewWindow)
+    chrome.storage.sync.get(["sessions", "openInNewWindow"], ({ sessions, openInNewWindow }) => {
+        const list = Array.isArray(sessions) ? sessions : [];
+        const session = list.find(s => s.id === sessionId);
+        const urls = getSessionUrls(session);
+
+        ensureFileAccessAllowed(urls, () => {
+            chrome.runtime.sendMessage({
+                type: "RESTORE_SESSION",
+                sessionId,
+                openInNewWindow: Boolean(openInNewWindow)
+            });
         });
     });
+}
+
+function ensureFileAccessAllowed(urls, callback) {
+    const hasFileUrl = urls.some(url => url.startsWith("file://"));
+    if (!hasFileUrl) {
+        callback();
+        return;
+    }
+
+    chrome.extension.isAllowedFileSchemeAccess((allowed) => {
+        if (allowed) {
+            callback();
+            return;
+        }
+
+        if (confirm(chrome.i18n.getMessage("fileAccessSettingsConfirm"))) {
+            openExtensionSettingsPage();
+        }
+    });
+}
+
+function openExtensionSettingsPage() {
+    chrome.tabs.create({ url: `chrome://extensions/?id=${chrome.runtime.id}` });
+}
+
+function getSessionUrls(session) {
+    const items = session && Array.isArray(session.urls) ? session.urls : [];
+    return items
+        .map(getSavedUrl)
+        .filter(Boolean);
 }
 
 function getSavedUrl(item) {
@@ -380,9 +416,11 @@ function decodeReadableUrl(url) {
 }
 
 function restoreUrl(url) {
-    chrome.runtime.sendMessage({
-        type: "RESTORE_URL",
-        url
+    ensureFileAccessAllowed([url], () => {
+        chrome.runtime.sendMessage({
+            type: "RESTORE_URL",
+            url
+        });
     });
 }
 

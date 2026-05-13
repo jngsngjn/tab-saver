@@ -28,5 +28,6 @@
   "storageError": { "message": "ストレージ容量不足のため保存に失敗しました" },
   "nameTooLong": { "message": "名前は20文字以内で入力してください" },
   "fileAccessDenied": { "message": "ローカルファイルを開くには、'ファイルの URL へのアクセスを許可する'設定が必要です。" },
+  "fileAccessSettingsConfirm": { "message": "'ファイルの URL へのアクセスを許可する'設定がオフのため、ファイルを開けません。拡張機能の設定ページを開きますか？" },
   "fileNotFound": { "message": "ファイルが見つからないか、移動された可能性があります: $FILE$", "placeholders": { "file": { "content": "$1" } } }
 }
