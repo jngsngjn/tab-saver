@@ -12,6 +12,8 @@
   "open": { "message": "열기" },
   "delete": { "message": "삭제" },
   "deleteNow": { "message": "즉시 삭제" },
+  "confirmOk": { "message": "확인" },
+  "confirmCancel": { "message": "취소" },
 
   "themeSystem": { "message": "테마: 시스템" },
   "themeLight": { "message": "테마: 라이트" },

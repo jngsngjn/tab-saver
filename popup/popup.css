@@ -609,6 +609,94 @@ body{
 }
 
 /* =====================
+   확인 대화상자
+===================== */
+.confirmDialog{
+    position:fixed;
+    inset:0;
+    z-index:10;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:12px;
+    background:rgba(15,23,42,.28);
+}
+
+.confirmPanel{
+    width:100%;
+    max-width:336px;
+    padding:18px;
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--card);
+    color:var(--text);
+    box-shadow:var(--shadow);
+}
+
+.confirmMessage{
+    margin:0;
+    font-size:13px;
+    line-height:1.5;
+    overflow-wrap:anywhere;
+    white-space:normal;
+}
+
+.confirmActions{
+    display:flex;
+    justify-content:flex-end;
+    gap:8px;
+    margin-top:16px;
+}
+
+.confirmBtn{
+    min-width:64px;
+    padding:8px 14px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    font-weight:700;
+    cursor:pointer;
+    transition:background-color .2s ease, border-color .2s ease, color .2s ease, box-shadow .2s ease;
+}
+
+.confirmOkBtn{
+    border-color:rgba(96,165,250,.45);
+    background:rgba(96,165,250,.22);
+    color:#bfdbfe;
+}
+
+.confirmOkBtn:hover{
+    background:rgba(96,165,250,.32);
+}
+
+.confirmCancelBtn{
+    background:rgba(148,163,184,.08);
+    color:var(--text);
+}
+
+.confirmCancelBtn:hover{
+    background:rgba(148,163,184,.14);
+}
+
+:root[data-theme="light"] .confirmOkBtn{
+    background:#e0edff;
+    border-color:#93c5fd;
+    color:#1d4ed8;
+}
+
+:root[data-theme="light"] .confirmOkBtn:hover{
+    background:#cfe2ff;
+}
+
+:root[data-theme="light"] .confirmCancelBtn{
+    background:#f1f5f9;
+    color:#334155;
+}
+
+:root[data-theme="light"] .confirmCancelBtn:hover{
+    background:#e2e8f0;
+}
+
+/* =====================
    Hint
 ===================== */
 .hint{
@@ -630,6 +718,25 @@ body{
 
     .toast.error{
         background:#fee2e2;
+    }
+
+    .confirmOkBtn{
+        background:#e0edff;
+        border-color:#93c5fd;
+        color:#1d4ed8;
+    }
+
+    .confirmOkBtn:hover{
+        background:#cfe2ff;
+    }
+
+    .confirmCancelBtn{
+        background:#f1f5f9;
+        color:#334155;
+    }
+
+    .confirmCancelBtn:hover{
+        background:#e2e8f0;
     }
 
     .openBtn{

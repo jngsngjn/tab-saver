@@ -12,6 +12,8 @@
   "open": { "message": "打开" },
   "delete": { "message": "删除" },
   "deleteNow": { "message": "立即删除" },
+  "confirmOk": { "message": "确定" },
+  "confirmCancel": { "message": "取消" },
 
   "themeSystem": { "message": "主题：跟随系统" },
   "themeLight": { "message": "主题：浅色" },

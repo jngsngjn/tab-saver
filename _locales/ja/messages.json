@@ -12,6 +12,8 @@
   "open": { "message": "開く" },
   "delete": { "message": "削除" },
   "deleteNow": { "message": "今すぐ削除" },
+  "confirmOk": { "message": "確認" },
+  "confirmCancel": { "message": "キャンセル" },
 
   "themeSystem": { "message": "テーマ: システム" },
   "themeLight": { "message": "テーマ: ライト" },

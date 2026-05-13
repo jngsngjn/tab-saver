@@ -12,6 +12,8 @@
   "open": { "message": "Open" },
   "delete": { "message": "Delete" },
   "deleteNow": { "message": "Delete Now" },
+  "confirmOk": { "message": "OK" },
+  "confirmCancel": { "message": "Cancel" },
 
   "themeSystem": { "message": "Theme: System" },
   "themeLight": { "message": "Theme: Light" },

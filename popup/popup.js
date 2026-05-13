@@ -5,6 +5,10 @@ const sessionList = document.getElementById("sessionList");
 const emptyHint = document.getElementById("emptyHint");
 const status = document.getElementById("status");
 const themeToggle = document.getElementById("themeToggle");
+const confirmDialog = document.getElementById("confirmDialog");
+const confirmMessage = document.getElementById("confirmMessage");
+const confirmOkBtn = document.getElementById("confirmOkBtn");
+const confirmCancelBtn = document.getElementById("confirmCancelBtn");
 
 let draggedItem = null;
 const DELETE_UNDO_MS = 3000;
@@ -18,6 +22,7 @@ const THEME_ICONS = {
     dark: "🌙"
 };
 let currentThemePreference = "system";
+let confirmResolve = null;
 
 function applyI18n() {
     document.querySelectorAll("[data-i18n]").forEach(el => {
@@ -68,6 +73,33 @@ document.getElementById("saveBtn").addEventListener("click", onSave);
 sessionNameInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
         onSave();
+    }
+});
+
+confirmOkBtn.addEventListener("click", () => {
+    closeConfirmDialog(true);
+});
+
+confirmCancelBtn.addEventListener("click", () => {
+    closeConfirmDialog(false);
+});
+
+confirmDialog.addEventListener("click", (e) => {
+    if (e.target === confirmDialog) {
+        closeConfirmDialog(false);
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (confirmDialog.classList.contains("hidden")) return;
+
+    if (e.key === "Escape") {
+        closeConfirmDialog(false);
+        return;
+    }
+
+    if (e.key === "Enter") {
+        closeConfirmDialog(true);
     }
 });
 
@@ -377,9 +409,12 @@ function ensureFileAccessAllowed(urls, callback) {
             return;
         }
 
-        if (confirm(chrome.i18n.getMessage("fileAccessSettingsConfirm"))) {
-            openExtensionSettingsPage();
-        }
+        showConfirm(chrome.i18n.getMessage("fileAccessSettingsConfirm"))
+            .then((confirmed) => {
+                if (confirmed) {
+                    openExtensionSettingsPage();
+                }
+            });
     });
 }
 
@@ -442,6 +477,29 @@ function showToast(message, type = "success") {
     status._timer = setTimeout(() => {
         status.classList.remove("show");
     }, 1500);
+}
+
+function showConfirm(message) {
+    if (confirmResolve) {
+        closeConfirmDialog(false);
+    }
+
+    confirmMessage.textContent = message;
+    confirmDialog.classList.remove("hidden");
+    confirmOkBtn.focus();
+
+    return new Promise((resolve) => {
+        confirmResolve = resolve;
+    });
+}
+
+function closeConfirmDialog(result) {
+    if (!confirmResolve) return;
+
+    const resolve = confirmResolve;
+    confirmResolve = null;
+    confirmDialog.classList.add("hidden");
+    resolve(result);
 }
 
 function handleDeleteClick(button, sessionId) {
