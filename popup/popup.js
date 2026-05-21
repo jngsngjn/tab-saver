@@ -115,25 +115,41 @@ function onSave() {
         return;
     }
 
-    chrome.runtime.sendMessage(
-        { type: "SAVE_SESSION", name },
-        (res) => {
-            if (!res || res.success === false) {
-                const message = (res && res.reason === "STORAGE_ERROR")
-                    ? chrome.i18n.getMessage("storageError")
-                    : chrome.i18n.getMessage("noTabsToSave");
-                showToast(message, "error");
-                return;
-            }
+    chrome.tabs.query({ currentWindow: true }, (tabs) => {
+        const urls = getSavableTabItems(tabs);
 
-            sessionNameInput.value = "";
-            showToast(
-                chrome.i18n.getMessage("savedToast", [res.count]),
-                "success"
-            );
-            renderSessionList();
+        if (urls.length === 0) {
+            showToast(chrome.i18n.getMessage("noTabsToSave"), "error");
+            return;
         }
-    );
+
+        chrome.storage.sync.get("sessions", (data) => {
+            const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+            const createdAt = Date.now();
+
+            sessions.unshift({
+                id: `sess_${createdAt}`,
+                name: name || formatSessionName(createdAt),
+                createdAt,
+                urls
+            });
+
+            chrome.storage.sync.set({ sessions }, () => {
+                if (chrome.runtime.lastError) {
+                    console.error("Storage Error:", chrome.runtime.lastError);
+                    showToast(chrome.i18n.getMessage("storageError"), "error");
+                    return;
+                }
+
+                sessionNameInput.value = "";
+                showToast(
+                    chrome.i18n.getMessage("savedToast", [urls.length]),
+                    "success"
+                );
+                renderSessionList();
+            });
+        });
+    });
 }
 
 function normalizeThemePreference(value) {
@@ -189,7 +205,7 @@ function renderSessionItem(session, isOpen = false) {
         .map((item, index) => {
             const url = getSavedUrl(item);
             const title = getSavedTitle(item);
-            const favicon = `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
+            const faviconIcon = renderUrlIcon(item, url);
 
             const displayTitle = escapeHtml(title);          // 화면 표시용
             const dataUrl = encodeURIComponent(url);         // data attribute 용(안전)
@@ -200,7 +216,7 @@ function renderSessionItem(session, isOpen = false) {
                 data-session-id="${session.id}"
                 data-url="${dataUrl}"
                 data-index="${index}">
-                <img src="${favicon}" class="urlFavicon" alt="" />
+                ${faviconIcon}
                 <span class="urlText" title="${displayTitle}">${displayTitle}</span>
                 <button class="urlDeleteBtn${isLastUrl ? " disabled" : ""}"
                         ${isLastUrl ? "disabled" : ""}
@@ -440,6 +456,111 @@ function getSavedTitle(item) {
         return item.title;
     }
     return decodeReadableUrl(getSavedUrl(item));
+}
+
+function getSavableTabItems(tabs) {
+    return tabs
+        .map(tab => {
+            const url = tab.url || tab.pendingUrl;
+            const originalUrl = extractOriginalUrl(url);
+            if (!isSavableUrl(originalUrl)) return null;
+
+            return {
+                url: originalUrl,
+                title: tab.title || originalUrl,
+                favIconUrl: tab.favIconUrl || ""
+            };
+        })
+        .filter(Boolean);
+}
+
+function isSavableUrl(url) {
+    if (!url) return false;
+    if (
+        url.startsWith("about:") ||
+        url.startsWith("edge://") ||
+        url.startsWith("brave://")
+    ) {
+        return false;
+    }
+
+    return (
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("chrome://") ||
+        url.startsWith("file://") ||
+        url.startsWith("chrome-extension://") ||
+        url.startsWith("view-source:")
+    );
+}
+
+function extractOriginalUrl(url) {
+    if (!url) return url;
+
+    if (url.startsWith("chrome-extension://") && isPdfViewerUrl(url)) {
+        try {
+            const urlObj = new URL(url);
+            const originalUrl = urlObj.searchParams.get("file") || urlObj.searchParams.get("src");
+            if (isRestorableUrl(originalUrl)) {
+                return originalUrl;
+            }
+        } catch {
+            return url;
+        }
+    }
+
+    return url;
+}
+
+function isPdfViewerUrl(url) {
+    return (
+        url.includes("viewer.html") ||
+        url.includes("pdf.js") ||
+        url.includes("mhjfbmdgcfjbbpaeojofohoefgiehjai")
+    );
+}
+
+function isRestorableUrl(url) {
+    return Boolean(url) && (
+        url.startsWith("http://") ||
+        url.startsWith("https://") ||
+        url.startsWith("chrome://") ||
+        url.startsWith("file://")
+    );
+}
+
+function formatSessionName(timestamp) {
+    const d = new Date(timestamp);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+        d.getDate()
+    ).padStart(2, "0")} ${String(d.getHours()).padStart(2, "0")}:${String(
+        d.getMinutes()
+    ).padStart(2, "0")}`;
+}
+
+function getSavedFaviconUrl(item) {
+    if (item && typeof item.favIconUrl === "string") return item.favIconUrl;
+    return "";
+}
+
+function renderUrlIcon(item, url) {
+    const savedFaviconUrl = getSavedFaviconUrl(item);
+    const favicon = savedFaviconUrl
+        || `chrome-extension://${chrome.runtime.id}/_favicon/?pageUrl=${encodeURIComponent(url)}&size=32`;
+
+    if (savedFaviconUrl || !isFileUrl(url)) {
+        return `<img src="${escapeHtml(favicon)}" class="urlFavicon" alt="" />`;
+    }
+
+    return `
+        <svg class="urlFavicon fileFavicon" viewBox="0 0 16 16" aria-hidden="true">
+            <path d="M3 1.5h6.5L13 5v9.5H3V1.5zm6 1.4V5.5h2.6L9 2.9zM4.5 3v10h7V7h-4V3h-3z"/>
+        </svg>
+    `;
+}
+
+function isFileUrl(url) {
+    return typeof url === "string" && url.toLowerCase().startsWith("file:");
 }
 
 function decodeReadableUrl(url) {

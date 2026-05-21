@@ -571,6 +571,11 @@ body{
     object-fit:contain;
 }
 
+.fileFavicon{
+    color:var(--muted);
+    fill:currentColor;
+}
+
 .urlItem:hover{
     color:var(--accent);
     background:rgba(96,165,250,.12);

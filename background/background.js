@@ -473,6 +473,7 @@ function isRestorableUrl(url) {
     return Boolean(url) && (
         url.startsWith("http://") ||
         url.startsWith("https://") ||
+        url.startsWith("chrome://") ||
         url.startsWith("file://")
     );
 }
@@ -480,9 +481,8 @@ function isRestorableUrl(url) {
 function isSavableUrl(url) {
     if (!url) return false;
 
-    // chrome://, about:, edge://, brave:// 등 브라우저 내부 페이지 제외
+    // about:, edge://, brave:// 등 저장 대상이 아닌 내부 페이지 제외
     if (
-        url.startsWith("chrome://") ||
         url.startsWith("about:") ||
         url.startsWith("edge://") ||
         url.startsWith("brave://")
@@ -490,11 +490,12 @@ function isSavableUrl(url) {
         return false;
     }
 
-    // http, https, file, chrome-extension, view-source 프로토콜 허용
+    // http, https, chrome, file, chrome-extension, view-source 프로토콜 허용
     // chrome-extension://은 크롬 내장 PDF 뷰어 등을 위해 허용
     return (
         url.startsWith("http://") ||
         url.startsWith("https://") ||
+        url.startsWith("chrome://") ||
         url.startsWith("file://") ||
         url.startsWith("chrome-extension://") ||
         url.startsWith("view-source:")
